@@ -10,120 +10,122 @@
     #result { margin-top: 10px; font-weight: bold; }
     #ranking li { margin-bottom: 4px; }
   </style>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
-</head>
-<body>
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, getDocs,
+      orderBy, query, serverTimestamp, limit
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-<h1>タイピング練習</h1>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAqDSPE_HkPbi-J-SqPL4Ys-wR4RaA8wKA",
+      authDomain: "otonano-typing-game.firebaseapp.com",
+      projectId: "otonano-typing-game",
+      storageBucket: "otonano-typing-game.appspot.com",
+      messagingSenderId: "475283850178",
+      appId: "1:475283850178:web:193d28f17be20a232f4c5b",
+      measurementId: "G-JE1X0NCNHB"
+    };
 
-<p id="text">読み込み中...</p>
-<input type="text" id="input" placeholder="ここにタイピング" disabled />
-<div id="result"></div>
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-<h3>名前と一緒に送信</h3>
-<input type="text" id="name" placeholder="あなたの名前" />
-<button onclick="submitScore()" disabled id="submitBtn">スコア送信</button>
+    const texts = [
+      "こんにちは、これはタイピング練習です。",
+      "毎日少しずつ上達しましょう！",
+      "JavaScriptは楽しい言語です。",
+      "空は青くて気持ちいいですね。",
+      "正確さとスピードの両方が大切です。"
+    ];
 
-<h2>🏆 ランキングTOP10</h2>
-<ul id="ranking"></ul>
+    let target = "";
+    let startTime = 0;
+    let ended = false;
 
-<script>
-  // ✅ あなたの Firebase 設定をここに貼る（スニペット）
-  const firebaseConfig = {
-    apiKey: "AIzaSyAqDSPE_HkPbi-J-SqPL4Ys-wR4RaA8wKA",
-    authDomain: "otonano-typing-game.firebaseapp.com",
-    projectId: "otonano-typing-game",
-    storageBucket: "otonano-typing-game.firebasestorage.app",
-    messagingSenderId: "475283850178",
-    appId: "1:475283850178:web:193d28f17be20a232f4c5b",
-    measurementId: "G-JE1X0NCNHB"
-  };
-
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-
-  // 🔠 タイピング対象の文章リスト（短め）
-  const texts = [
-    "こんにちは、これはタイピング練習です。",
-    "毎日少しずつ上達しましょう！",
-    "JavaScriptは楽しい言語です。",
-    "空は青くて気持ちいいですね。",
-    "正確さとスピードの両方が大切です。"
-  ];
-
-  let target = "";
-  let startTime = 0;
-  let ended = false;
-
-  function setNewText() {
-    target = texts[Math.floor(Math.random() * texts.length)];
-    document.getElementById("text").textContent = target;
-    const input = document.getElementById("input");
-    input.value = "";
-    input.disabled = false;
-    input.focus();
-    ended = false;
-    startTime = 0;
-    document.getElementById("result").textContent = "";
-    document.getElementById("submitBtn").disabled = true;
-  }
-
-  document.getElementById("input").addEventListener("input", () => {
-    const input = document.getElementById("input").value;
-    if (input === target && !ended) {
-      ended = true;
-      const endTime = Date.now();
-      const seconds = (endTime - startTime) / 1000;
-      const wpm = Math.round((input.length / 5) / (seconds / 60));
-      document.getElementById("result").textContent = `完了！WPM: ${wpm}`;
-      document.getElementById("submitBtn").disabled = false;
-      document.getElementById("submitBtn").dataset.wpm = wpm;
-    } else if (input.length === 1 && startTime === 0) {
-      startTime = Date.now();
-    }
-  });
-
-  function submitScore() {
-    const name = document.getElementById("name").value;
-    const wpm = parseInt(document.getElementById("submitBtn").dataset.wpm);
-    if (!name || isNaN(wpm)) {
-      alert("名前を入力してください");
-      return;
+    function setNewText() {
+      target = texts[Math.floor(Math.random() * texts.length)];
+      document.getElementById("text").textContent = target;
+      const input = document.getElementById("input");
+      input.value = "";
+      input.disabled = false;
+      input.focus();
+      ended = false;
+      startTime = 0;
+      document.getElementById("result").textContent = "";
+      document.getElementById("submitBtn").disabled = true;
     }
 
-    db.collection("scores").add({
-      name: name,
-      wpm: wpm,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-      alert("保存しました！");
-      loadRanking();
-      setNewText();
-    });
-  }
+    window.addEventListener("DOMContentLoaded", () => {
+      const inputBox = document.getElementById("input");
+      const submitBtn = document.getElementById("submitBtn");
 
-  function loadRanking() {
-    const list = document.getElementById("ranking");
-    list.innerHTML = "";
+      inputBox.addEventListener("input", () => {
+        const input = inputBox.value;
+        if (input === target && !ended) {
+          ended = true;
+          const endTime = Date.now();
+          const seconds = (endTime - startTime) / 1000;
+          const wpm = Math.round((input.length / 5) / (seconds / 60));
+          document.getElementById("result").textContent = `完了！WPM: ${wpm}`;
+          submitBtn.disabled = false;
+          submitBtn.dataset.wpm = wpm;
+        } else if (input.length === 1 && startTime === 0) {
+          startTime = Date.now();
+        }
+      });
 
-    db.collection("scores")
-      .orderBy("wpm", "desc")
-      .limit(10)
-      .get()
-      .then(snapshot => {
+      submitBtn.addEventListener("click", async () => {
+        const name = document.getElementById("name").value;
+        const wpm = parseInt(submitBtn.dataset.wpm);
+        if (!name || isNaN(wpm)) {
+          alert("名前を入力してください");
+          return;
+        }
+
+        try {
+          await addDoc(collection(db, "scores"), {
+            name: name,
+            wpm: wpm,
+            timestamp: serverTimestamp()
+          });
+          alert("保存しました！");
+          loadRanking();
+          setNewText();
+        } catch (error) {
+          alert("保存に失敗しました: " + error);
+        }
+      });
+
+      async function loadRanking() {
+        const list = document.getElementById("ranking");
+        list.innerHTML = "";
+        const q = query(collection(db, "scores"), orderBy("wpm", "desc"), limit(10));
+        const snapshot = await getDocs(q);
         snapshot.forEach(doc => {
           const data = doc.data();
           const li = document.createElement("li");
           li.textContent = `${data.name} - ${data.wpm} WPM`;
           list.appendChild(li);
         });
-      });
-  }
+      }
 
-  loadRanking();
-  setNewText();
-</script>
+      loadRanking();
+      setNewText();
+    });
+  </script>
+</head>
+<body>
+  <h1>タイピング練習</h1>
+  <p id="text">読み込み中...</p>
+  <input type="text" id="input" placeholder="ここにタイピング" disabled />
+  <div id="result"></div>
+
+  <h3>名前と一緒に送信</h3>
+  <input type="text" id="name" placeholder="あなたの名前" />
+  <button id="submitBtn" disabled>スコア送信</button>
+
+  <h2>🏆 ランキングTOP10</h2>
+  <ul id="ranking"></ul>
 </body>
 </html>
-
