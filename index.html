@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>タイピングランキング</title>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+</head>
+<body>
+  <h1>タイピングスコアを登録</h1>
+  <input type="text" id="name" placeholder="名前を入力" />
+  <input type="number" id="wpm" placeholder="WPMを入力" />
+  <button onclick="submitScore()">スコア送信</button>
+
+  <h2>🏆 ランキングTOP10</h2>
+  <ul id="ranking"></ul>
+
+  <script>
+    // ここにあなたの Firebase 設定を貼る（後でOK）
+    const firebaseConfig = {
+      apiKey: "AIzaSyAqDSPE_HkPbi-J-SqPL4Ys-wR4RaA8wKA",
+      authDomain: "otonano-typing-game.firebaseapp.com",
+      projectId: "otonano-typing-game",
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function submitScore() {
+      const name = document.getElementById("name").value;
+      const wpm = parseInt(document.getElementById("wpm").value);
+
+      if (!name || isNaN(wpm)) {
+        alert("名前とWPMを正しく入力してください");
+        return;
+      }
+
+      db.collection("scores").add({
+        name: name,
+        wpm: wpm,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        alert("保存しました！");
+        loadRanking();
+      });
+    }
+
+    function loadRanking() {
+      const list = document.getElementById("ranking");
+      list.innerHTML = "";
+
+      db.collection("scores")
+        .orderBy("wpm", "desc")
+        .limit(10)
+        .get()
+        .then(snapshot => {
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const li = document.createElement("li");
+            li.textContent = `${data.name} - ${data.wpm} WPM`;
+            list.appendChild(li);
+          });
+        });
+    }
+
+    loadRanking();
+  </script>
+</body>
+</html>
