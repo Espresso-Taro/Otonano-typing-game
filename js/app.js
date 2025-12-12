@@ -1,210 +1,153 @@
-// ===============================
-// app.js（完全統合・修正版）
-// ===============================
+// js/app.js
+import { initFirebase } from "./firebase.js";
+import { TypingEngine } from "./typingEngine.js";
+import { RankingService } from "./ranking.js";
+import { UserManager } from "./userManager.js";
 
-import { initTypingEngine } from "./typingEngine.js";
-import { initRanking } from "./ranking.js";
-import { initUserManager } from "./userManager.js";
+function $(id){ return document.getElementById(id); }
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import {
-  getAuth,
-  signInAnonymously,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-/* ===============================
-   Firebase 初期化
-=============================== */
-const firebaseConfig = {
-  apiKey: "AIzaSyAqDSPE_HkPbi-J-SqPL4Ys-wR4RaA8wKA",
-  authDomain: "otonano-typing-game.firebaseapp.com",
-  projectId: "otonano-typing-game",
-  storageBucket: "otonano-typing-game.appspot.com",
-  messagingSenderId: "475283850178",
-  appId: "1:475283850178:web:193d28f17be20a232f4c5b"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-/* ===============================
-   DOM
-=============================== */
-const difficultySelect = document.getElementById("difficulty");
-const categorySelect   = document.getElementById("category");
-const themeSelect      = document.getElementById("theme");
-const dailyThemeChk    = document.getElementById("dailyTheme");
-const dailyInfo        = document.getElementById("dailyInfo");
-
-const textEl   = document.getElementById("text");
-const inputEl  = document.getElementById("input");
-const startBtn = document.getElementById("startBtn");
-const skipBtn  = document.getElementById("skipBtn");
-
-const authBadge = document.getElementById("authBadge");
-
-/* ===============================
-   状態
-=============================== */
-let uid = null;
-let trivia = [];
-let currentItem = null;
-let typingEngine = null;
-let ranking = null;
-let userManager = null;
-
-/* ===============================
-   Utils
-=============================== */
-function todayKey() {
-  const d = new Date();
+function todayKey(){
+  const d=new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
-
-/* ===============================
-   JSON 読み込み
-=============================== */
-async function loadTrivia() {
-  const res = await fetch("./data/trivia.json", { cache: "no-store" });
-  trivia = await res.json();
-}
-
-/* ===============================
-   Select 初期化（空対策）
-=============================== */
-function initSelects() {
-  // 難易度
-  difficultySelect.innerHTML = `
-    <option value="all">難易度：すべて</option>
-    <option value="easy">かんたん</option>
-    <option value="normal">ふつう</option>
-    <option value="hard">むずかしい</option>
-  `;
-
-  // カテゴリ
-  const categories = [...new Set(trivia.map(t => t.category).filter(Boolean))];
-  categorySelect.innerHTML =
-    `<option value="all">カテゴリ：すべて</option>` +
-    categories.map(c => `<option value="${c}">${c}</option>`).join("");
-
-  // テーマ
-  const themes = [...new Set(trivia.map(t => t.theme).filter(Boolean))];
-  themeSelect.innerHTML =
-    `<option value="all">テーマ：すべて</option>` +
-    themes.map(t => `<option value="${t}">${t}</option>`).join("");
-}
-
-/* ===============================
-   今日のテーマ
-=============================== */
-function getTodayTheme() {
-  const themes = [...new Set(trivia.map(t => t.theme))];
-  if (!themes.length) return null;
-  const idx = Math.abs(
-    [...todayKey()].reduce((a,c)=>a+c.charCodeAt(0),0)
-  ) % themes.length;
-  return themes[idx];
-}
-
-/* ===============================
-   出題選択
-=============================== */
-function pickItem() {
-  let pool = [...trivia];
-
-  if (dailyThemeChk.checked) {
-    const todayTheme = getTodayTheme();
-    pool = pool.filter(t => t.theme === todayTheme);
-    dailyInfo.textContent = `今日（${todayKey()}）のテーマ：${todayTheme}`;
-    dailyInfo.style.display = "block";
-  } else {
-    dailyInfo.style.display = "none";
+function hashString(str){
+  let h=2166136261;
+  for(let i=0;i<str.length;i++){
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h,16777619);
   }
-
-  if (categorySelect.value !== "all") {
-    pool = pool.filter(t => t.category === categorySelect.value);
-  }
-  if (themeSelect.value !== "all") {
-    pool = pool.filter(t => t.theme === themeSelect.value);
-  }
-
-  if (!pool.length) return null;
-  return pool[Math.floor(Math.random() * pool.length)];
+  return (h>>>0);
 }
 
-/* ===============================
-   新しい文章
-=============================== */
-function setNewText() {
-  currentItem = pickItem() || trivia[0];
-  if (!currentItem) return;
-
-  textEl.textContent = "";
-  typingEngine.setText(currentItem.text);
-  inputEl.value = "";
-  inputEl.disabled = true;
+async function loadTrivia(){
+  const res = await fetch("./data/trivia.json",{cache:"no-store"});
+  if(!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  if(!Array.isArray(json)) throw new Error("JSON配列ではありません");
+  return json;
 }
 
-/* ===============================
-   メイン初期化
-=============================== */
 window.addEventListener("DOMContentLoaded", async () => {
+  const authStateEl = $("authState");
+  const todayThemeEl = $("todayTheme");
 
-  textEl.textContent = "読み込み中...";
-
-  // Firebase 認証
-  await signInAnonymously(auth);
-  onAuthStateChanged(auth, user => {
-    if (user) {
-      uid = user.uid;
-      authBadge.textContent = "認証：OK（匿名）";
-    }
+  const { db, onAuthReady, getUid } = initFirebase({
+    onAuthState: (t) => { if (authStateEl) authStateEl.textContent = t; }
   });
 
-  // JSON
-  await loadTrivia();
-  initSelects();
+  let items = [];
+  try {
+    items = await loadTrivia();
+  } catch (e) {
+    alert(`JSON読み込み失敗: ${e?.message ?? e}\nfile://直開きは不可。GitHub Pagesかローカルサーバで開いてください。`);
+    return;
+  }
 
-  // ユーザー管理
-  userManager = initUserManager(db, auth);
-  userManager.init();
+  const themes = Array.from(new Set(items.map(x => x?.theme).filter(Boolean)));
+  if (!themes.length) {
+    alert("theme が見つかりません。trivia.json の各要素に theme を入れてください。");
+    return;
+  }
 
-  // ランキング
-  ranking = initRanking(db);
+  const dailyTheme = themes[hashString(todayKey()) % themes.length];
+  if (todayThemeEl) todayThemeEl.textContent = `今日のテーマ：${dailyTheme}`;
 
-  // タイピングエンジン
-  typingEngine = initTypingEngine({
-    inputEl,
-    textEl,
-    onFinish: (result) => {
-      ranking.saveScore({
+  // 今日テーマの問題だけ出す（混入しない）
+  const dailyPool = () => items.filter(x => x?.text && x?.theme === dailyTheme);
+
+  let currentItem = null;
+  const pick = () => {
+    const pool = dailyPool();
+    if (!pool.length) return null;
+    return pool[Math.floor(Math.random() * pool.length)];
+  };
+
+  currentItem = pick();
+  if (!currentItem) {
+    alert("今日のテーマに該当する問題がありません。trivia.json を確認してください。");
+    return;
+  }
+
+  // 端末ユーザー
+  const users = new UserManager($("userSelect"));
+  $("addUser")?.addEventListener("click", () => {
+    const n = prompt("ユーザー名（端末内最大10名）");
+    if (n) users.add(n);
+  });
+  $("userSelect")?.addEventListener("change", (e) => users.select(e.target.value));
+
+  // Ranking
+  const ranking = new RankingService({ db });
+
+  // Typing
+  const engine = new TypingEngine({
+    textEl: $("text"),
+    inputEl: $("input"),
+    getTargetText: () => currentItem?.text ?? "",
+    onComplete: async (m) => {
+      await onAuthReady();
+      const uid = getUid();
+      if (!uid) { alert("匿名認証が未完了です。再読み込みしてください。"); return; }
+
+      const name = users.current || "NoName";
+
+      // ★日替わりテーマ以外は保存しない（ranking側で遮断）
+      await ranking.saveDaily({
         uid,
-        user: userManager.getCurrentUser(),
-        item: currentItem,
-        result
+        name,
+        dailyTheme,
+        itemTheme: currentItem.theme,
+        difficultyKey: "diff_all", // 完全版の難易度キーに接続するならここを差し替え
+        cpm: m.cpm,
+        kpm: m.kpm,
+        rank: m.rank
       });
-      ranking.reload();
+
+      // 今日のテーマTOP10を表示（DOMがある場合）
+      const listEl = $("dailyRanking");
+      if (listEl) {
+        const rows = await ranking.loadDailyTop10({ dailyTheme, difficultyKey: "diff_all" });
+        listEl.innerHTML = "";
+        if (!rows.length) {
+          const li = document.createElement("li");
+          li.textContent = "まだスコアがありません。";
+          listEl.appendChild(li);
+        } else {
+          for (const r of rows) {
+            const li = document.createElement("li");
+            li.textContent = RankingService.formatRow(r);
+            listEl.appendChild(li);
+          }
+        }
+      }
+
+      // 次の問題
+      currentItem = pick();
+      if (!currentItem) return;
+      engine.setText(currentItem.text);
     }
   });
 
-  // UI イベント
-  startBtn.addEventListener("click", () => {
-    typingEngine.start();
+  engine.setText(currentItem.text);
+  engine.bind();
+
+  $("startBtn")?.addEventListener("click", () => engine.startCountdown());
+  $("nextBtn")?.addEventListener("click", () => {
+    currentItem = pick();
+    if (currentItem) engine.setText(currentItem.text);
   });
 
-  skipBtn.addEventListener("click", () => {
-    setNewText();
-  });
-
-  difficultySelect.addEventListener("change", setNewText);
-  categorySelect.addEventListener("change", setNewText);
-  themeSelect.addEventListener("change", setNewText);
-  dailyThemeChk.addEventListener("change", setNewText);
-
-  setNewText();
+  // 初回ランキング表示
+  try {
+    const listEl = $("dailyRanking");
+    if (listEl) {
+      const rows = await ranking.loadDailyTop10({ dailyTheme, difficultyKey: "diff_all" });
+      listEl.innerHTML = "";
+      for (const r of rows) {
+        const li = document.createElement("li");
+        li.textContent = RankingService.formatRow(r);
+        listEl.appendChild(li);
+      }
+    }
+  } catch {}
 });
