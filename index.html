@@ -5,16 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- SEO（最重要） -->
-  <title>漢字変換対応のタイピング練習｜雑学文章で実用入力と知識を学べる（ランキング対応）</title>
-  <meta name="description" content="漢字変換を含めた実用的なタイピング練習ができる無料ブラウザソフト。雑学を題材にした文章で、入力スピード・正確性の向上と知識習得を同時に行え、ランキングにも対応しています。" />
+  <title>漢字変換対応のタイピング練習｜雑学・豆知識文章で実用入力と知識を学べる（ランキング対応）</title>
+  <meta name="description" content="漢字変換を含めた実用的なタイピング練習ができる無料ブラウザソフト。雑学・豆知識を題材にした文章で、入力スピードと正確性の向上、知識習得を同時に行えます。ランキングにも対応。" />
 
   <!-- canonical -->
   <link rel="canonical" href="https://espresso-taro.github.io/Otonano-typing-game/" />
 
   <!-- OGP -->
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="漢字変換対応のタイピング練習｜雑学文章で実用入力と知識を学べる（ランキング対応）" />
-  <meta property="og:description" content="雑学文章で漢字変換を含む実用的なタイピング練習ができます。無料・ブラウザ対応、ランキング機能あり。" />
+  <meta property="og:title" content="漢字変換対応のタイピング練習｜雑学・豆知識文章で実用入力と知識を学べる（ランキング対応）" />
+  <meta property="og:description" content="雑学・豆知識を使った文章で、漢字変換を含む実用的なタイピング練習ができます。無料・ブラウザ対応、ランキング機能あり。" />
   <meta property="og:url" content="https://espresso-taro.github.io/Otonano-typing-game/" />
   <meta name="twitter:card" content="summary" />
 
@@ -112,103 +112,8 @@
     "name":"漢字変換対応のタイピング練習",
     "url":"https://espresso-taro.github.io/Otonano-typing-game/",
     "inLanguage":"ja",
-    "description":"雑学文章を使って、漢字変換を含む実用的なタイピング練習と知識習得ができる無料ブラウザソフト。ランキング対応。"
+    "description":"雑学・豆知識を使った文章で、漢字変換を含む実用的なタイピング練習と知識習得ができる無料ブラウザソフト。ランキング対応。"
   }
-  </script>
-
-  <!-- Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, getDocs,
-      orderBy, query, serverTimestamp, limit
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAqDSPE_HkPbi-J-SqPL4Ys-wR4RaA8wKA",
-      authDomain: "otonano-typing-game.firebaseapp.com",
-      projectId: "otonano-typing-game",
-      storageBucket: "otonano-typing-game.appspot.com",
-      messagingSenderId: "475283850178",
-      appId: "1:475283850178:web:193d28f17be20a232f4c5b"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    const texts = [
-      "日本語入力では漢字変換の正確さが作業効率を大きく左右する。",
-      "短時間でも継続したタイピング練習は確実に成果につながる。",
-      "集中力は長時間よりも適切な区切りを入れることで維持しやすい。",
-      "正確性を優先した入力は、結果的にタイピング速度の向上につながる。",
-      "知識を伴う文章入力は、単調な練習よりも記憶に残りやすい。"
-    ];
-
-    let target = "";
-    let startTime = 0;
-    let ended = false;
-
-    function setNewText() {
-      target = texts[Math.floor(Math.random() * texts.length)];
-      document.getElementById("text").textContent = target;
-      const input = document.getElementById("input");
-      input.value = "";
-      input.disabled = false;
-      input.focus();
-      ended = false;
-      startTime = 0;
-      document.getElementById("result").textContent = "";
-      document.getElementById("submitBtn").disabled = true;
-    }
-
-    window.addEventListener("DOMContentLoaded", () => {
-      const inputBox = document.getElementById("input");
-      const submitBtn = document.getElementById("submitBtn");
-
-      inputBox.addEventListener("input", () => {
-        const input = inputBox.value;
-        if (input === target && !ended) {
-          ended = true;
-          const seconds = (Date.now() - startTime) / 1000;
-          const wpm = Math.round((input.length / 5) / (seconds / 60));
-          document.getElementById("result").textContent = `完了！WPM: ${wpm}`;
-          submitBtn.disabled = false;
-          submitBtn.dataset.wpm = wpm;
-        } else if (input.length === 1 && startTime === 0) {
-          startTime = Date.now();
-        }
-      });
-
-      submitBtn.addEventListener("click", async () => {
-        const name = document.getElementById("name").value;
-        const wpm = parseInt(submitBtn.dataset.wpm);
-        if (!name || isNaN(wpm)) {
-          alert("名前を入力してください");
-          return;
-        }
-        await addDoc(collection(db, "scores"), {
-          name, wpm, timestamp: serverTimestamp()
-        });
-        loadRanking();
-        setNewText();
-      });
-
-      async function loadRanking() {
-        const list = document.getElementById("ranking");
-        list.innerHTML = "";
-        const q = query(collection(db, "scores"), orderBy("wpm", "desc"), limit(10));
-        const snapshot = await getDocs(q);
-        snapshot.forEach(doc => {
-          const d = doc.data();
-          const li = document.createElement("li");
-          li.textContent = `${d.name} - ${d.wpm} WPM`;
-          list.appendChild(li);
-        });
-      }
-
-      loadRanking();
-      setNewText();
-    });
   </script>
 </head>
 
@@ -216,7 +121,7 @@
   <header>
     <h1>漢字変換対応のタイピング練習</h1>
     <p class="lead">
-      雑学を題材にした文章で、漢字変換を含む実用的なタイピング練習ができます。
+      雑学・豆知識を題材にした文章で、漢字変換を含む実用的なタイピング練習ができます。
       入力スピードと正確性を高めながら、知識も同時に学べるのが特徴です。
     </p>
     <p><a class="cta" href="#play">今すぐ練習する</a></p>
@@ -295,4 +200,5 @@
   </main>
 </body>
 </html>
+
 
