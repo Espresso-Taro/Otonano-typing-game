@@ -4,21 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- SEO（最重要） -->
-  <title>漢字変換対応のタイピング練習｜雑学・豆知識文章で実用入力と知識を学べる（ランキング対応）</title>
-  <meta name="description" content="漢字変換を含めた実用的なタイピング練習ができる無料ブラウザソフト。雑学・豆知識を題材にした文章で、入力スピードと正確性の向上、知識習得を同時に行えます。ランキングにも対応。" />
+  <!-- SEO -->
+  <title>漢字変換対応のタイピング練習｜雑学・豆知識で日本語入力と知識を同時に鍛える（ランキング対応）</title>
+  <meta name="description" content="漢字変換を含む実用的な日本語タイピング練習ができる無料ブラウザソフト。雑学・豆知識を題材にした文章で、入力スピード・正確性と知識を同時に鍛えられます。ランキング対応。" />
 
-  <!-- canonical -->
   <link rel="canonical" href="https://espresso-taro.github.io/Otonano-typing-game/" />
 
   <!-- OGP -->
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="漢字変換対応のタイピング練習｜雑学・豆知識文章で実用入力と知識を学べる（ランキング対応）" />
-  <meta property="og:description" content="雑学・豆知識を使った文章で、漢字変換を含む実用的なタイピング練習ができます。無料・ブラウザ対応、ランキング機能あり。" />
+  <meta property="og:title" content="漢字変換対応のタイピング練習｜雑学・豆知識で日本語入力と知識を同時に鍛える（ランキング対応）" />
+  <meta property="og:description" content="雑学・豆知識文章で漢字変換を含む実用的なタイピング練習ができます。無料・ブラウザ対応、ランキング機能あり。" />
   <meta property="og:url" content="https://espresso-taro.github.io/Otonano-typing-game/" />
   <meta name="twitter:card" content="summary" />
 
-  <!-- Style -->
   <style>
     :root { --max: 980px; }
     body {
@@ -33,20 +31,15 @@
       padding: 16px;
     }
     header { padding-top: 28px; }
-    h1 { font-size: 1.9rem; margin: 0 0 10px; }
+    h1 { font-size: 1.9rem; margin-bottom: 10px; }
     h2 { margin-top: 36px; }
-    .lead { font-size: 1.05rem; margin-bottom: 14px; }
+    .lead { font-size: 1.05rem; }
     .muted { color: #555; }
     .card {
       border: 1px solid #ddd;
       border-radius: 12px;
       padding: 16px;
       background: #fff;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
     }
     .cta {
       display: inline-block;
@@ -80,40 +73,108 @@
       flex-wrap: wrap;
       align-items: center;
     }
-    #name {
+    #name, #submitBtn {
       font-size: 1rem;
       padding: 10px;
       border-radius: 10px;
-      border: 1px solid #ccc;
     }
+    #name { border: 1px solid #ccc; }
     #submitBtn {
-      font-size: 1rem;
-      padding: 10px 12px;
-      border-radius: 10px;
       border: 1px solid #222;
       background: #fff;
       cursor: pointer;
     }
-    details {
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      padding: 10px 12px;
-      background: #fff;
-    }
-    details + details { margin-top: 10px; }
-    footer { padding-bottom: 28px; }
   </style>
 
-  <!-- 構造化データ：WebSite -->
-  <script type="application/ld+json">
-  {
-    "@context":"https://schema.org",
-    "@type":"WebSite",
-    "name":"漢字変換対応のタイピング練習",
-    "url":"https://espresso-taro.github.io/Otonano-typing-game/",
-    "inLanguage":"ja",
-    "description":"雑学・豆知識を使った文章で、漢字変換を含む実用的なタイピング練習と知識習得ができる無料ブラウザソフト。ランキング対応。"
-  }
+  <!-- Firebase + JSON -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, getDocs,
+      orderBy, query, serverTimestamp, limit
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAqDSPE_HkPbi-J-SqPL4Ys-wR4RaA8wKA",
+      authDomain: "otonano-typing-game.firebaseapp.com",
+      projectId: "otonano-typing-game",
+      storageBucket: "otonano-typing-game.appspot.com",
+      messagingSenderId: "475283850178",
+      appId: "1:475283850178:web:193d28f17be20a232f4c5b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let texts = [];
+    let target = "";
+    let startTime = 0;
+    let ended = false;
+
+    async function loadTexts() {
+      const res = await fetch("./data/trivia.json");
+      const json = await res.json();
+      texts = json.map(item => item.text);
+    }
+
+    function setNewText() {
+      if (texts.length === 0) return;
+      target = texts[Math.floor(Math.random() * texts.length)];
+      document.getElementById("text").textContent = target;
+      const input = document.getElementById("input");
+      input.value = "";
+      input.disabled = false;
+      input.focus();
+      ended = false;
+      startTime = 0;
+      document.getElementById("result").textContent = "";
+      document.getElementById("submitBtn").disabled = true;
+    }
+
+    window.addEventListener("DOMContentLoaded", async () => {
+      await loadTexts();
+      loadRanking();
+      setNewText();
+
+      const inputBox = document.getElementById("input");
+      const submitBtn = document.getElementById("submitBtn");
+
+      inputBox.addEventListener("input", () => {
+        const input = inputBox.value;
+        if (input === target && !ended) {
+          ended = true;
+          const seconds = (Date.now() - startTime) / 1000;
+          const wpm = Math.round((input.length / 5) / (seconds / 60));
+          document.getElementById("result").textContent = `完了！WPM: ${wpm}`;
+          submitBtn.disabled = false;
+          submitBtn.dataset.wpm = wpm;
+        } else if (input.length === 1 && startTime === 0) {
+          startTime = Date.now();
+        }
+      });
+
+      submitBtn.addEventListener("click", async () => {
+        const name = document.getElementById("name").value;
+        const wpm = parseInt(submitBtn.dataset.wpm);
+        if (!name || isNaN(wpm)) return alert("名前を入力してください");
+        await addDoc(collection(db, "scores"), { name, wpm, timestamp: serverTimestamp() });
+        loadRanking();
+        setNewText();
+      });
+    });
+
+    async function loadRanking() {
+      const list = document.getElementById("ranking");
+      list.innerHTML = "";
+      const q = query(collection(db, "scores"), orderBy("wpm", "desc"), limit(10));
+      const snapshot = await getDocs(q);
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const li = document.createElement("li");
+        li.textContent = `${d.name} - ${d.wpm} WPM`;
+        list.appendChild(li);
+      });
+    }
   </script>
 </head>
 
@@ -121,8 +182,8 @@
   <header>
     <h1>漢字変換対応のタイピング練習</h1>
     <p class="lead">
-      雑学・豆知識を題材にした文章で、漢字変換を含む実用的なタイピング練習ができます。
-      入力スピードと正確性を高めながら、知識も同時に学べるのが特徴です。
+      雑学・豆知識を題材にした文章で、漢字変換を含む実用的な日本語入力を練習できます。
+      タイピング練習と知識習得を同時に行えるのが特徴です。
     </p>
     <p><a class="cta" href="#play">今すぐ練習する</a></p>
   </header>
@@ -130,7 +191,6 @@
   <main>
     <section id="play" class="card">
       <h2>タイピング練習</h2>
-
       <p id="text">読み込み中...</p>
       <input id="input" placeholder="ここに入力" disabled />
       <div id="result"></div>
@@ -148,57 +208,6 @@
         <p class="muted">このゲームはJavaScriptが必要です。ブラウザ設定でJavaScriptを有効にしてください。</p>
       </noscript>
     </section>
-
-    <section>
-      <h2>特徴</h2>
-      <div class="grid">
-        <div class="card"><strong>無料・インストール不要</strong><br>ブラウザだけで練習できます。</div>
-        <div class="card"><strong>漢字変換を含む実用練習</strong><br>実務に近い日本語入力を想定しています。</div>
-        <div class="card"><strong>ランキング対応</strong><br>スコアを保存して成長を可視化できます。</div>
-        <div class="card"><strong>雑学で知識も習得</strong><br>入力しながら自然に知識が身につきます。</div>
-      </div>
-    </section>
-
-    <section>
-      <h2>遊び方</h2>
-      <ol>
-        <li>表示された文章をそのまま入力します</li>
-        <li>最初の1文字で計測開始、全文一致で完了します</li>
-        <li>結果を確認し、希望すればランキングに登録します</li>
-      </ol>
-      <p class="muted">
-        コツ：最初は速度より正確性を優先し、慣れてきたら徐々にスピードを上げましょう。
-      </p>
-    </section>
-
-    <section>
-      <h2>よくある質問</h2>
-      <details>
-        <summary>無料で使えますか？</summary>
-        <p>はい。すべての機能を無料で利用できます。</p>
-      </details>
-      <details>
-        <summary>漢字変換の練習になりますか？</summary>
-        <p>なります。実用的な日本語文章を使うため、自然な漢字変換の練習が可能です。</p>
-      </details>
-      <details>
-        <summary>ランキングは公開されますか？</summary>
-        <p>はい。入力した名前とWPMがランキングに表示されます。</p>
-      </details>
-      <details>
-        <summary>スマホでも使えますか？</summary>
-        <p>閲覧は可能ですが、タイピング練習としてはPCキーボードを推奨します。</p>
-      </details>
-    </section>
-
-    <section>
-      <h2>更新情報</h2>
-      <ul>
-        <li>2025-12-XX: 初回公開</li>
-      </ul>
-    </section>
   </main>
 </body>
 </html>
-
-
