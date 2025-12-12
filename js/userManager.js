@@ -1,60 +1,44 @@
 // js/userManager.js
-const USERS_KEY = "typing_users_v2";
-const LAST_KEY  = "typing_last_user_v2";
-
 export class UserManager {
-  constructor(selectEl) {
-    this.selectEl = selectEl;
+  constructor(select) {
+    this.select = select;
+    this.key = "typing_users";
+    this.last = "typing_last";
 
-    const raw = localStorage.getItem(USERS_KEY);
-    this.users = [];
-    try {
-      const parsed = JSON.parse(raw || "[]");
-      if (Array.isArray(parsed)) this.users = parsed;
-    } catch {}
+    this.users = JSON.parse(localStorage.getItem(this.key) || "[]");
+    this.current = localStorage.getItem(this.last) || this.users[0];
 
-    this.current = localStorage.getItem(LAST_KEY) || this.users[0] || "ユーザー1";
+    if (!this.current) this.current = "ユーザー1";
     if (!this.users.includes(this.current)) this.users.unshift(this.current);
 
     this.users = this.users.slice(0, 10);
-    this._save();
-    this._render();
+    this.save();
+    this.render();
+  }
+
+  render() {
+    this.select.innerHTML = "";
+    this.users.forEach(u => {
+      const o = document.createElement("option");
+      o.value = u;
+      o.textContent = u;
+      o.selected = u === this.current;
+      this.select.appendChild(o);
+    });
   }
 
   add(name) {
-    const n = (name || "").trim();
-    if (!n) return;
-
-    this.users = this.users.filter(x => x !== n);
-    this.users.unshift(n);
+    if (!name) return;
+    this.users = this.users.filter(u => u !== name);
+    this.users.unshift(name);
     this.users = this.users.slice(0, 10);
-    this.current = n;
-
-    this._save();
-    this._render();
+    this.current = name;
+    this.save();
+    this.render();
   }
 
-  select(name) {
-    const n = (name || "").trim();
-    if (!n) return;
-    this.current = n;
-    this._save();
-    this._render();
-  }
-
-  _save() {
-    localStorage.setItem(USERS_KEY, JSON.stringify(this.users));
-    localStorage.setItem(LAST_KEY, this.current);
-  }
-
-  _render() {
-    this.selectEl.innerHTML = "";
-    for (const u of this.users) {
-      const opt = document.createElement("option");
-      opt.value = u;
-      opt.textContent = u;
-      opt.selected = (u === this.current);
-      this.selectEl.appendChild(opt);
-    }
+  save() {
+    localStorage.setItem(this.key, JSON.stringify(this.users));
+    localStorage.setItem(this.last, this.current);
   }
 }
