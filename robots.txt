@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://oritonet.github.io/Otonano-typing-game/sitemap.xml
