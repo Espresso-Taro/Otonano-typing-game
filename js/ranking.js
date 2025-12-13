@@ -36,20 +36,19 @@ export class RankingService {
   }
 
   _sortAndTop10(rows) {
-    // rankingScore desc, tie: cpm desc, tie: kpm desc
+    // cpm desc, tie: createdAt desc（あれば）
     const sorted = rows.slice().sort((a, b) => {
-      const as = Number(a.rankingScore ?? -999999);
-      const bs = Number(b.rankingScore ?? -999999);
-      if (bs !== as) return bs - as;
       const ac = Number(a.cpm ?? -999999);
       const bc = Number(b.cpm ?? -999999);
       if (bc !== ac) return bc - ac;
-      const ak = Number(a.kpm ?? -999999);
-      const bk = Number(b.kpm ?? -999999);
-      return bk - ak;
+  
+      const at = a.createdAt?.toMillis?.() ?? 0;
+      const bt = b.createdAt?.toMillis?.() ?? 0;
+      return bt - at;
     });
     return sorted.slice(0, 10);
   }
+
 
   async loadOverall({ difficulty = "all" }) {
     const rows = await this._fetchScores({ difficulty, maxFetch: 800 });
@@ -90,9 +89,10 @@ export class RankingService {
       const cpm = r.cpm ?? "-";
       const kpm = r.kpm ?? "-";
       const rank = r.rank ?? "-";
-      const score = r.rankingScore ?? "-";
-      li.textContent = `${i + 1}. ${name}｜Score ${score}｜CPM ${cpm}｜KPM ${kpm}｜${rank}`;
+      const score = r.cpm ?? "-";
+      li.textContent = `${i + 1}. ${name}｜Score ${score}（CPM）｜${rank}`;
       ul.appendChild(li);
     }
   }
 }
+
