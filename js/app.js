@@ -292,11 +292,11 @@ function hydrateSelects() {
   `;
 
   lengthGroupEl.innerHTML = `
-    <option value="xs">文長：極短</option>
-    <option value="short">文長：短</option>
-    <option value="medium" selected>文長：中</option>
-    <option value="long">文長：長</option>
-    <option value="xl">文長：極長</option>
+    <option value="xs">長さ：極短</option>
+    <option value="short">長さ：短</option>
+    <option value="medium" selected>長さ：中</option>
+    <option value="long">長さ：長</option>
+    <option value="xl">長さ：極長</option>
   `;
 
   categoryEl.innerHTML =
@@ -950,6 +950,7 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
 
 
 
