@@ -63,7 +63,7 @@ const rankingUL = document.getElementById("ranking");
 
 const bestByDifficultyUL = document.getElementById("bestByDifficulty");
 const compareTodayEl = document.getElementById("compareToday");
-const diffChart = document.getElementById("diffChart");
+const scoreChart = document.getElementById("scoreChart");
 const myRecentUL = document.getElementById("myRecent");
 
 const modalBackdrop = document.getElementById("resultModalBackdrop");
@@ -525,8 +525,21 @@ function avg(arr) {
   return Math.round(arr.reduce((s, x) => s + x, 0) / arr.length);
 }
 
-function drawDiffChart(values) {
-  const canvas = diffChart;
+function buildDailyBestSeries(histories) {
+  // dateKey -> bestCpm
+  const map = new Map();
+  for (const h of histories) {
+    const key = h.dateKey;
+    if (!key) continue;
+    const v = Number(h.cpm ?? 0);
+    if (!map.has(key) || v > map.get(key)) map.set(key, v);
+  }
+  const keys = Array.from(map.keys()).sort(); // YYYY-MM-DD なので文字列sortでOK
+  return keys.map(k => ({ dateKey: k, score: map.get(k) }));
+}
+
+function drawScoreChart(points) {
+  const canvas = scoreChart;
   const ctx = canvas.getContext("2d");
 
   const cssW = canvas.clientWidth;
@@ -541,20 +554,22 @@ function drawDiffChart(values) {
 
   ctx.fillStyle = "#555";
   ctx.font = "12px system-ui";
-  ctx.fillText("KPM−CPM 差（小さいほど効率的）", 12, 14);
+  ctx.fillText("スコア（CPM）推移：縦=スコア / 横=日付", 12, 14);
 
-  if (!values.length) {
+  if (!points.length) {
     ctx.fillText("履歴がありません。", 12, 34);
     return;
   }
 
-  const pad = 24;
+  const pad = 28;
   const w = cssW - pad * 2;
   const h = cssH - pad * 2;
 
-  const maxV = Math.max(...values, 10);
-  const minV = Math.min(...values, 0);
+  const ys = points.map(p => p.score);
+  const maxV = Math.max(...ys, 10);
+  const minV = Math.min(...ys, 0);
 
+  // 軸
   ctx.strokeStyle = "#ddd";
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -563,19 +578,29 @@ function drawDiffChart(values) {
   ctx.lineTo(pad + w, pad + h);
   ctx.stroke();
 
+  // 折れ線
   ctx.strokeStyle = "#0b5ed7";
   ctx.lineWidth = 2;
   ctx.beginPath();
-
-  const n = values.length;
+  const n = points.length;
   for (let i = 0; i < n; i++) {
     const x = pad + (n === 1 ? 0 : (i / (n - 1)) * w);
-    const norm = (values[i] - minV) / (maxV - minV || 1);
+    const norm = (points[i].score - minV) / (maxV - minV || 1);
     const y = pad + h - norm * h;
     if (i === 0) ctx.moveTo(x, y);
     else ctx.lineTo(x, y);
   }
   ctx.stroke();
+
+  // 日付ラベル（間引き）
+  ctx.fillStyle = "#666";
+  ctx.font = "10px system-ui";
+  const step = Math.max(1, Math.floor(n / 6));
+  for (let i = 0; i < n; i += step) {
+    const x = pad + (n === 1 ? 0 : (i / (n - 1)) * w);
+    const label = points[i].dateKey.slice(5); // MM-DD
+    ctx.fillText(label, x - 12, pad + h + 14);
+  }
 }
 
 function rankScoreValue(r) {
@@ -693,7 +718,6 @@ function formatCompare(todayObj, avg7Obj) {
 async function loadMyAnalytics(uid, userName) {
   try {
     const colRef = collection(db, "scores");
-    // 複合indexを避けるため uid== だけで取る → userName はクライアントで絞る
     const q = query(colRef, where("uid", "==", uid));
     const snap = await getDocs(q);
 
@@ -707,35 +731,36 @@ async function loadMyAnalytics(uid, userName) {
         dateKey: d.dateKey ?? "",
         difficulty: d.difficulty ?? "",
         cpm: Number(d.cpm ?? 0),
-        kpm: Number(d.kpm ?? 0),
-        diff: Number(d.diff ?? 0),
-        rank: d.rank ?? "D",
         createdAtMs: ms
       });
     });
 
     const mine = rows.filter(r => r.userName === userName);
 
-    // 新しい順に揃える
+    // 新しい順
     mine.sort((a, b) => (b.createdAtMs ?? 0) - (a.createdAtMs ?? 0));
 
     renderRecent(mine);
     renderBestByDifficulty(mine);
 
-    const diffSeries = mine.slice(0, 60).reverse().map(h => h.diff);
-    drawDiffChart(diffSeries.slice(-30));
+    // ★ ここが5-4の本体
+    const selectedDiff = difficultyEl.value;
+    let view = mine;
+    if (selectedDiff !== "all") {
+      view = mine.filter(r => r.difficulty === selectedDiff);
+    }
 
-    const t = summarizeToday(mine);
-    const a7 = summarize7days(mine);
-    formatCompare(t, a7);
+    const series = buildDailyBestSeries(view);
+    drawScoreChart(series);
+
   } catch (e) {
     console.error("analytics load error", e);
     bestByDifficultyUL.innerHTML = "<li>分析の読み込みに失敗しました</li>";
     myRecentUL.innerHTML = "<li>分析の読み込みに失敗しました</li>";
-    compareTodayEl.textContent = "分析の読み込みに失敗しました。";
-    drawDiffChart([]);
+    drawScoreChart([]);
   }
 }
+
 
 /* =========================
    Save score (auto)
@@ -746,22 +771,18 @@ async function saveScoreToScoresCollection({ uid, userName, metrics, item, filte
     uid,
     userName,
 
-    cpm: metrics.cpm,
+    cpm: metrics.cpm,            // 新スコア
     kpm: metrics.kpm,
     eff: Math.round(metrics.eff * 10000) / 10000,
     diff: metrics.diff,
     rank: metrics.rank,
-    rankingScore: metrics.rankingScore,
 
-    // 出題メタ
-    difficulty: item?.difficulty ?? (filters.difficulty === "all" ? "（すべて）" : filters.difficulty),
-    category: item?.category ?? (filters.category === "all" ? "（すべて）" : filters.category),
-    theme: item?.theme ?? (filters.theme === "all" ? "（すべて）" : filters.theme),
-    length: item?.length ?? (item?.text?.length ?? 0),
-
-    // 今日のテーマ厳密分離に使う
+    difficulty: item?.difficulty ?? "normal",
+    lengthGroup: item?.lengthGroup ?? "medium",
+    category: item?.category ?? "...",
+    theme: item?.theme ?? "...",
+    length: item?.length ?? 0,
     dateKey: todayKey(),
-
     createdAt: serverTimestamp()
   });
 }
@@ -950,6 +971,7 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
 
 
 
