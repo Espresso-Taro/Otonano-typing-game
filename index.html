@@ -43,7 +43,7 @@
     }
     .toggle input { width: 18px; height: 18px; }
 
-    /* 見本文 */
+    /* 見本文（確定済みのみで色分け） */
     #text {
       font-size: 1.25em;
       background: #f3f3f3;
@@ -73,28 +73,8 @@
       background: #fff;
     }
 
-    /* カウントダウン */
-    #countdownWrap {
-      display: none;
-      border: 1px dashed #bbb;
-      border-radius: 12px;
-      padding: 14px;
-      background: #fff;
-      margin: 10px 0 0;
-      text-align: center;
-    }
-    #countdown {
-      font-size: 2.2rem;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-    }
-    #countdownSub {
-      margin-top: 6px;
-      color: #666;
-      font-size: 0.95rem;
-    }
-
     #result { margin-top: 10px; font-weight: 800; }
+
     ul { padding-left: 1.2em; }
     #ranking li, #dailyRanking li, #myRecent li, #bestByDifficulty li { margin-bottom: 6px; }
 
@@ -106,6 +86,42 @@
     details + details { margin-top: 10px; }
 
     footer { padding-bottom: 28px; color: #666; }
+
+    /* 成績ポップアップ（見える・消えない） */
+    .modalBackdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 16px;
+    }
+    .modal {
+      width: min(720px, 100%);
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid #ddd;
+      padding: 16px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+    }
+    .modal h3 { margin: 0 0 10px; }
+    .modal .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    @media (min-width: 720px) {
+      .modal .grid { grid-template-columns: 1fr 1fr; }
+    }
+    .kpi {
+      border: 1px solid #eee;
+      border-radius: 12px;
+      padding: 12px;
+      background: #fafafa;
+    }
+    .kpi .v { font-size: 1.35rem; font-weight: 900; }
+    .modalActions { display:flex; gap: 10px; justify-content: flex-end; margin-top: 12px; flex-wrap: wrap; }
   </style>
 </head>
 
@@ -133,35 +149,26 @@
     <section id="play" class="card" aria-label="タイピング練習">
       <h2>タイピング練習</h2>
 
-      <!-- 画像の黄色エリア改善：不要なバッジ列は廃止。必要な設定だけを上部に集約 -->
       <div class="row" style="margin-bottom:10px;">
         <select id="difficulty" aria-label="難易度"></select>
         <select id="category" aria-label="カテゴリ"></select>
         <select id="theme" aria-label="テーマ"></select>
 
-        <!-- チェックは右 -->
         <label class="toggle" title="今日のテーマに固定します（毎日変わります）">
           <span>日替わりテーマ</span>
           <input type="checkbox" id="dailyTheme" />
         </label>
       </div>
 
-      <!-- 今日のテーマは必要最小限で表示（固定時にだけ補助表示） -->
       <div class="muted" id="dailyInfo" style="margin:0 0 10px; display:none;"></div>
 
-      <!-- 別の文章（見本文の上） -->
       <div class="row" style="margin: 0 0 6px;">
         <button id="skipBtn" type="button">別の文章にする</button>
       </div>
 
-      <!-- スタート + カウントダウン -->
       <div class="row" style="margin: 0 0 6px;">
         <button id="startBtn" type="button">スタート</button>
-        <div class="muted" id="startHint">スタート後、3→2→1→0で開始します（入力欄に自動フォーカス）。</div>
-      </div>
-      <div id="countdownWrap" aria-live="polite">
-        <div id="countdown">3</div>
-        <div id="countdownSub">準備してください</div>
+        <div class="muted" id="startHint">スタート後、3→2→1→0で開始します（入力欄内にカウント表示・自動フォーカス）。</div>
       </div>
 
       <p id="text">読み込み中...</p>
@@ -171,7 +178,7 @@
 
       <div class="split" style="margin-top: 18px;">
         <div class="card" style="border-color:#eee;">
-          <h3 style="margin-top:0;">今日のテーマランキング</h3>
+          <h3 style="margin-top:0;">今日のテーマランキング（固定表示）</h3>
           <div class="muted" id="dailyRankLabel" style="margin-bottom: 8px;"></div>
           <ul id="dailyRanking"></ul>
         </div>
@@ -200,7 +207,7 @@
           <ul id="bestByDifficulty"></ul>
 
           <h3>今日の自分 vs 過去7日平均</h3>
-          <div id="compareToday" class="muted">データが不足しています（履歴を数回保存すると表示されます）。</div>
+          <div id="compareToday" class="muted">データが不足しています（履歴が増えると表示されます）。</div>
         </div>
 
         <div>
@@ -224,8 +231,8 @@
         <p>IMEの変換確定前（変換中）は判定しません。確定された文字だけで判定します。</p>
       </details>
       <details>
-        <summary>KPMは何を数えていますか？</summary>
-        <p>通常文字・Backspace/Deleteに加え、Space（変換）とEnter（確定）も打鍵として数えます。</p>
+        <summary>スコア送信ボタンは無いの？</summary>
+        <p>入力完了時に、選択ユーザー名で自動保存します。</p>
       </details>
     </section>
   </main>
@@ -233,6 +240,26 @@
   <footer>
     <p>© 2025</p>
   </footer>
+
+  <!-- 完了ポップアップ -->
+  <div id="resultModalBackdrop" class="modalBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="resultModalTitle">
+      <h3 id="resultModalTitle">結果</h3>
+      <div class="grid">
+        <div class="kpi"><div class="muted">ランク</div><div class="v" id="mRank">-</div></div>
+        <div class="kpi"><div class="muted">効率（CPM/KPM）</div><div class="v" id="mEff">-</div></div>
+        <div class="kpi"><div class="muted">CPM（文字/分）</div><div class="v" id="mCPM">-</div></div>
+        <div class="kpi"><div class="muted">KPM（打鍵/分）</div><div class="v" id="mKPM">-</div></div>
+        <div class="kpi"><div class="muted">KPM−CPM差</div><div class="v" id="mDiff">-</div></div>
+        <div class="kpi"><div class="muted">ランキングScore</div><div class="v" id="mScore">-</div></div>
+      </div>
+      <div class="muted" id="mMeta" style="margin-top:10px;"></div>
+      <div class="modalActions">
+        <button id="closeModalBtn" type="button">閉じる</button>
+        <button id="nextBtn" type="button">次の文章へ</button>
+      </div>
+    </div>
+  </div>
 
   <script type="module" src="./js/app.js"></script>
 </body>
