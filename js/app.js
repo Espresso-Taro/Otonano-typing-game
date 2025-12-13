@@ -100,10 +100,25 @@ function hashString(str) {
   return (h >>> 0);
 }
 
-function punctCount(text) {
-  const m = text.match(/[、。,.!！?？]/g);
-  return m ? m.length : 0;
+// 記号スコア（IME入力の負荷を反映）
+// 強・中・弱・基本の4段階
+function punctScore(text) {
+  // 強い記号：ペア管理・判断負荷が高い
+  const strong = (text.match(/[（）「」『』［］【】＜＞”’]/g) || []).length;
+
+  // 中程度：Shift必須・意味は明確
+  const middle = (text.match(/[￥＄：；]/g) || []).length;
+
+  // 軽め：頻出だがミス源
+  const weak = (text.match(/[ー・＃％＆＋－＝／]/g) || []).length;
+
+  // 基本的な句読点
+  const basic = (text.match(/[、。,.!！?？]/g) || []).length;
+
+  // 重み付け（中で合算 → 難易度側でまとめて評価）
+  return strong * 3 + middle * 2 + weak * 1 + basic * 1;
 }
+
 function digitCount(text) {
   const m = text.match(/[0-9]/g);
   return m ? m.length : 0;
@@ -116,15 +131,21 @@ function kanjiRatio(text) {
 
 // ★難易度：文章長は含めない（漢字率/記号/数字）
 function difficultyByText(text) {
-  const kr = kanjiRatio(text);       // 0..1
-  const p = punctCount(text);        // 記号数
+  const kr = kanjiRatio(text);        // 漢字率（0〜1）
+  const pScore = punctScore(text);   // 記号スコア（重み込み）
   const d = digitCount(text);        // 数字数
-  const score = kr * 100 + p * 6 + d * 10;
+
+  // ★文章長は一切使わない
+  const score =
+    kr * 100 +        // 漢字の重み（最重要）
+    pScore * 6 +      // 記号の重み
+    d * 10;           // 数字の重み（英数切替）
 
   if (score < 25) return "easy";
   if (score < 55) return "normal";
   return "hard";
 }
+
 
 // ★文章長グループ：ユーザー選択で絞り込みに使う
 function lengthGroupOf(len) {
@@ -917,3 +938,4 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
