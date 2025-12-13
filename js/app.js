@@ -406,6 +406,10 @@ function setNewText() {
 
   engine.setTarget(pick.text, pick);
 
+  // スタートを押すまで入力禁止
+  inputEl.value = "入力を開始してください";
+  inputEl.disabled = true;
+  
   // ★ 次の問題ではスタートボタンを再表示
   startBtn.style.display = "block";
 
@@ -871,6 +875,7 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
 
 
 
