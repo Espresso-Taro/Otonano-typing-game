@@ -494,8 +494,8 @@ function updateLabels() {
     `🏆 今日のテーマ「${dailyTheme ?? "—"}」TOP10（Score順）`;
 
   const scope = rankScopeEl.value;
-  const diffTxt = (difficulty === "all") ? "すべて" : diffLabel(difficulty);
-  const lenTxt = (lengthGroup === "all") ? "すべて" : lengthLabel(lengthGroup);
+  const diffTxt = diffLabel(difficulty);
+  const lenTxt = lengthLabel(lengthGroup);
 
   if (scope === "overall") {
     rankLabel.textContent = `全体TOP10（難易度：${diffTxt} / 文章長：${lenTxt}）`;
@@ -949,6 +949,7 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
 
 
 
