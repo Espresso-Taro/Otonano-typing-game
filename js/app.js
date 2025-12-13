@@ -242,8 +242,8 @@ function hydrateSelects() {
 
   rankScopeEl.innerHTML = `
     <option value="overall">ランキング：全体</option>
-    <option value="category">ランキング：カテゴリ別（現在のカテゴリ）</option>
-    <option value="theme">ランキング：テーマ別（現在のテーマ）</option>
+    <option value="category">ランキング：現在のカテゴリ</option>
+    <option value="theme">ランキング：現在のテーマ</option>
   `;
 }
 
@@ -898,6 +898,7 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
 
 
 
