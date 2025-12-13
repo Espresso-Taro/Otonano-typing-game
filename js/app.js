@@ -553,7 +553,7 @@ function avg(arr) {
 function renderBestByDifficulty(histories) {
   bestByDifficultyUL.innerHTML = "";
 
-  const diffs = ["easy", "normal", "hard"];
+  const diffs = ["easy", "normal", "hard", "extreme"]; // ★極を追加
   const best = {};
   for (const d of diffs) best[d] = { bestCpm: null };
 
@@ -950,6 +950,7 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
 
 
 
