@@ -1,11 +1,6 @@
 // js/typingEngine.js
 export class TypingEngine {
-  constructor({
-    textEl,
-    inputEl,
-    resultEl,
-    onFinish
-  }) {
+  constructor({ textEl, inputEl, resultEl, onFinish }) {
     this.textEl = textEl;
     this.inputEl = inputEl;
     this.resultEl = resultEl;
@@ -22,7 +17,7 @@ export class TypingEngine {
     this.isComposing = false;
     this.lastCommittedValue = "";
 
-    this.keystrokes = 0; // KPM用（IME寄り：Space/Enterも含む）
+    this.keystrokes = 0; // 参考（表示や保存に使わない方針でも残しておく）
   }
 
   setTarget(text, meta = null) {
@@ -41,29 +36,26 @@ export class TypingEngine {
     this.inputEl.disabled = true;
     this.resultEl.textContent = "";
 
-    this._renderByCommitted(""); // 最初は黒
+    this._renderByCommitted("");
   }
 
   // カウントダウン表示は「入力欄内」に出す
   showCountdownInTextarea(n) {
     this.inputEl.disabled = true;
     this.inputEl.classList.add("countdown");
-  
-    // 数字だけ表示
+
     this.inputEl.value = String(n);
-  
+
     // ▼上下中央寄せ：textareaの高さからpadding-topを計算（%は使わない）
     const el = this.inputEl;
     const cs = getComputedStyle(el);
-    const fontSize = parseFloat(cs.fontSize) || 0;          // px
-    const h = el.clientHeight;                               // padding含む内側高さ
+    const fontSize = parseFloat(cs.fontSize) || 0; // px
+    const h = el.clientHeight;
     const padTop = Math.max(0, Math.floor((h - fontSize) / 2));
-  
+
     el.style.paddingTop = `${padTop}px`;
     el.style.paddingBottom = "0px";
   }
-
-
 
   enableReadyState() {
     this.inputEl.disabled = false;
@@ -80,7 +72,7 @@ export class TypingEngine {
   }
 
   attach() {
-    // keydown: 打鍵カウント（IME寄り）
+    // keydown: 打鍵カウント（参考）
     this.inputEl.addEventListener("keydown", (e) => {
       if (!this.started || this.ended) return;
 
@@ -94,14 +86,12 @@ export class TypingEngine {
     // composition: 変換中は判定しない・色を変えない
     this.inputEl.addEventListener("compositionstart", () => {
       this.isComposing = true;
-      // ここで lastCommittedValue を固定（色が戻らないため）
       this.lastCommittedValue = this._getCommittedValueSafe();
       this._renderByCommitted(this.lastCommittedValue);
     });
 
     this.inputEl.addEventListener("compositionend", () => {
       this.isComposing = false;
-      // 変換確定後の値で committed を更新して判定する
       this.lastCommittedValue = this._getCommittedValueSafe();
       this._renderByCommitted(this.lastCommittedValue);
       this._tryFinishIfMatched();
@@ -112,12 +102,10 @@ export class TypingEngine {
       if (!this.started || this.ended) return;
 
       if (this.isComposing) {
-        // 変換中は committed 表示を保つ（黒に戻さない）
         this._renderByCommitted(this.lastCommittedValue);
         return;
       }
 
-      // 通常入力（確定文字）なので committed 更新
       this.lastCommittedValue = this._getCommittedValueSafe();
       this._renderByCommitted(this.lastCommittedValue);
       this._tryFinishIfMatched();
@@ -125,17 +113,17 @@ export class TypingEngine {
   }
 
   _getCommittedValueSafe() {
-    // textareaの値はここでは確定文字を含む（composition中でも変わるが、compositionstartで固定している）
     return this.inputEl.value ?? "";
   }
 
   _tryFinishIfMatched() {
-    // 確定文字で完全一致したら即終了
     if (this.ended) return;
     const committed = this.lastCommittedValue;
 
+    // 確定文字で完全一致したら即終了
     if (committed === this.target) {
       this.ended = true;
+
       const endMs = Date.now();
       const sec = Math.max(0.001, (endMs - this.startTimeMs) / 1000);
 
@@ -145,58 +133,47 @@ export class TypingEngine {
         keystrokes: this.keystrokes
       });
 
-      this.resultEl.innerHTML =
-        `完了！` +
-        `　CPM: ${metrics.cpm}　KPM: ${metrics.kpm}　ランク: ${metrics.rank}　Score: ${metrics.rankingScore}`;
+      // 表示（app.js側でモーダルも出す）
+      this.resultEl.innerHTML = `完了！ スコア(CPM): ${metrics.cpm}　ランク: ${metrics.rank}`;
 
       this.onFinish?.({ metrics, meta: this.targetMeta });
 
-      // 終了後は入力無効（次へはボタン）
       this.inputEl.disabled = true;
     }
   }
 
+  // ★新仕様：CPM（=スコア）は「文章長 ÷ 完了時間」
   computeMetrics({ committed, seconds, keystrokes }) {
     const minutes = seconds / 60;
-  
-    // 新：スコア（=CPM）は「出題文の長さ ÷ 完了時間」
+
+    // 出題文の文字数で評価する（漢字/かな混在でも公平）
     const targetLen = (this.target ?? "").length;
+
     const cpm = Math.round((targetLen / minutes));
-  
-    // KPM等を残すならそのまま（使わなくてもOK）
+
+    // 参考値として残す（使わないなら保存しなくてOK）
     const kpm = Math.round((keystrokes / minutes));
-    const eff = (kpm > 0) ? (cpm / kpm) : 0;
-    const diff = Math.max(0, kpm - cpm);
-  
-    // ランク/ランキングScore は後で ranking.js と合わせて見直す（手順4）
-    const rank = this.calcRank(cpm, kpm);
-    const rankingScore = cpm; // ← いったん「スコア=CPM」に寄せる
-  
-    return { cpm, kpm, eff, diff, rank, rankingScore };
+
+    const rank = this.calcRank(cpm);
+
+    return {
+      cpm,
+      rank,
+      seconds: Math.round(seconds * 1000) / 1000,
+      length: targetLen,
+      kpm
+    };
   }
 
-
-  // ランク（SSS〜D）
-  calcRank(cpm, kpm) {
-    const eff = (kpm > 0) ? (cpm / kpm) : 0;
-    if (cpm >= 420 && eff >= 0.92) return "SSS";
-    if (cpm >= 360 && eff >= 0.88) return "SS";
-    if (cpm >= 320 && eff >= 0.84) return "S";
-    if (cpm >= 260 && eff >= 0.78) return "A";
-    if (cpm >= 200 && eff >= 0.72) return "B";
+  // ★新方針：ランクは「速く一致できたか」中心（CPMだけ）
+  calcRank(cpm) {
+    if (cpm >= 520) return "SSS";
+    if (cpm >= 440) return "SS";
+    if (cpm >= 380) return "S";
+    if (cpm >= 300) return "A";
+    if (cpm >= 220) return "B";
     if (cpm >= 150) return "C";
     return "D";
-  }
-
-  // rankingScore（ランキング並び順の本体）
-  calcRankingScore(cpm, kpm) {
-    const eff = (kpm > 0) ? (cpm / kpm) : 0;
-    const waste = Math.max(0, kpm - cpm);
-    return Math.round(
-      cpm * 1.0 +
-      eff * 100 -
-      waste * 0.3
-    );
   }
 
   // 見本文：確定文字だけで青/赤を付ける（変換中は lastCommitted を使う）
@@ -233,6 +210,3 @@ export class TypingEngine {
     this.textEl.innerHTML = html;
   }
 }
-
-
-
