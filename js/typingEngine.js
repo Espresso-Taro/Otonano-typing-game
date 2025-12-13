@@ -47,12 +47,22 @@ export class TypingEngine {
   // カウントダウン表示は「入力欄内」に出す
   showCountdownInTextarea(n) {
     this.inputEl.disabled = true;
-  
-    // カウントダウン用スタイルを付与
     this.inputEl.classList.add("countdown");
   
+    // 数字だけ表示
     this.inputEl.value = String(n);
+  
+    // ▼上下中央寄せ：textareaの高さからpadding-topを計算（%は使わない）
+    const el = this.inputEl;
+    const cs = getComputedStyle(el);
+    const fontSize = parseFloat(cs.fontSize) || 0;          // px
+    const h = el.clientHeight;                               // padding含む内側高さ
+    const padTop = Math.max(0, Math.floor((h - fontSize) / 2));
+  
+    el.style.paddingTop = `${padTop}px`;
+    el.style.paddingBottom = "0px";
   }
+
 
 
   enableReadyState() {
@@ -219,4 +229,5 @@ export class TypingEngine {
     this.textEl.innerHTML = html;
   }
 }
+
 
