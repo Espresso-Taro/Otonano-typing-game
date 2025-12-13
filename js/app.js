@@ -359,8 +359,8 @@ function getActiveFilters() {
 function filterPool() {
   const { daily, difficulty, lengthGroup, category, theme } = getActiveFilters();
   return items.filter(x => {
-    if (difficulty !== "all" && x.difficulty !== difficulty) return false;
-    if (lengthGroup !== "all" && x.lengthGroup !== lengthGroup) return false;
+    if (x.difficulty !== difficulty) return false;
+    if (x.lengthGroup !== lengthGroup) return false;
     if (!daily && category !== "all" && x.category !== category) return false;
     if (theme !== "all" && x.theme !== theme) return false;
     return true;
@@ -726,7 +726,7 @@ async function loadMyAnalytics(uid, userName) {
     renderBestByDifficulty(mine);
 
     // ★難易度選択で絞った系列をグラフ化（難易度別保存に対応）
-    const selectedDiff = difficultyEl.value; // all/easy/normal/hard
+    const selectedDiff = difficultyEl.value; // easy/normal/hard/extream
     let view = mine;
     const view = mine.filter(r => r.difficulty === selectedDiff);
     const series = buildDailyBestSeries(view);
@@ -949,6 +949,7 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
 
 
 
