@@ -57,18 +57,18 @@ export class RankingService {
     return sorted.slice(0, 10);
   }
 
-  async loadOverall({ difficulty = "all", lengthGroup = "all" }) {
+  async loadOverall({ difficulty, lengthGroup }) {
     const rows = await this._fetchScores({ difficulty, lengthGroup, maxFetch: 800 });
     return this._sortAndTop10(rows);
   }
 
-  async loadByCategory({ category, difficulty = "all", lengthGroup = "all" }) {
+  async loadByCategory({ category, difficulty, lengthGroup }) {
     if (!category || category === "all") return this.loadOverall({ difficulty, lengthGroup });
     const rows = await this._fetchScores({ category, difficulty, lengthGroup, maxFetch: 800 });
     return this._sortAndTop10(rows);
   }
 
-  async loadByTheme({ theme, difficulty = "all", lengthGroup = "all" }) {
+  async loadByTheme({ theme, difficulty, lengthGroup  }) {
     if (!theme || theme === "all") return this.loadOverall({ difficulty, lengthGroup });
     const rows = await this._fetchScores({ theme, difficulty, lengthGroup, maxFetch: 800 });
     return this._sortAndTop10(rows);
@@ -100,4 +100,5 @@ export class RankingService {
     }
   }
 }
+
 
