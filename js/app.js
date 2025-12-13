@@ -85,6 +85,16 @@ const mMeta = document.getElementById("mMeta");
 /* =========================
    Utils
 ========================= */
+function rankByScore(score) {
+  if (score >= 800) return "SSS";
+  if (score >= 700) return "SS";
+  if (score >= 600) return "S";
+  if (score >= 500) return "A";
+  if (score >= 400) return "B";
+  if (score >= 300) return "C";
+  return "D";
+}
+
 function todayKey() {
   const d = new Date();
   const y = d.getFullYear();
@@ -583,7 +593,8 @@ function renderRecent(histories) {
   for (const h of slice) {
     const li = document.createElement("li");
     const lenTxt = h.lengthGroup ? `｜${lengthLabel(h.lengthGroup)}` : "";
-    li.textContent = `${h.dateKey}｜${diffLabel(h.difficulty)}${lenTxt}｜Score ${h.cpm}`;
+    li.textContent =
+      `${h.dateKey}｜${diffLabel(h.difficulty)}｜${lengthLabel(h.lengthGroup)}｜${h.rank ?? "-" }｜${h.cpm}`;
     myRecentUL.appendChild(li);
   }
 }
@@ -749,30 +760,22 @@ async function loadMyAnalytics(uid, userName) {
    Save score (auto)
 ========================= */
 async function saveScoreToScoresCollection({ uid, userName, metrics, item }) {
+  const score = metrics.cpm;
+  const rank = rankByScore(score);
+
   await addDoc(collection(db, "scores"), {
-    uid,
-    userName,
-
-    // ★スコア本体（=CPM）
-    cpm: metrics.cpm,
-    rank: metrics.rank,
-
-    // ★難易度別で保存
-    difficulty: item?.difficulty ?? "normal",
-
-    // ★文章長は難易度に含めず、別軸で保存・絞り込み
-    lengthGroup: item?.lengthGroup ?? "medium",
-
-    // 出題メタ
-    category: item?.category ?? "（不明）",
-    theme: item?.theme ?? "（不明）",
-    length: item?.length ?? (item?.text?.length ?? 0),
-
-    // 分析の横軸（日付）
+    uid: user.uid,
+    userName: userMgr.getCurrentUserName(),
+    cpm: score,
+    rank, // ★追加
+    difficulty: meta.difficulty,
+    lengthGroup: meta.lengthGroup,
+    category: meta.category,
+    theme: meta.theme,
     dateKey: todayKey(),
-
     createdAt: serverTimestamp()
   });
+
 }
 
 /* =========================
@@ -950,6 +953,7 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
 
 
 
