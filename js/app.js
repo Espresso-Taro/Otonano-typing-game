@@ -176,7 +176,7 @@ function escapeHtml(s) {
     .replaceAll("'","&#039;");
 }
 
-functionfunction diffLabel(v) {
+function diffLabel(v) {
   if (v === "easy") return "易";
   if (v === "normal") return "普";
   if (v === "hard") return "難";
@@ -947,6 +947,7 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
 
 
 
