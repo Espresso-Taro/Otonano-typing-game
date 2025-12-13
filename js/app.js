@@ -346,11 +346,11 @@ const engine = new TypingEngine({
 
 engine.attach();
 
-inputEl.addEventListener("input", () => {
-  if (engine.started && inputEl.value === "ここに入力") {
-    inputEl.value = "";
-  }
-});
+/inputEl.addEventListener("input", () => {
+/  if (engine.started && inputEl.value === "ここに入力") {
+/    inputEl.value = "";
+/  }
+/});
 
 /* =========================
    Countdown + Start
@@ -907,6 +907,7 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
 
 
 
