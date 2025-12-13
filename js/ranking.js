@@ -28,11 +28,13 @@ export class RankingService {
     if (category) filters.push(where("category", "==", category));
     if (dateKey) filters.push(where("dateKey", "==", dateKey));
 
-    // ★難易度別保存・参照
-    if (difficulty && difficulty !== "all") filters.push(where("difficulty", "==", difficulty));
-
-    // ★文章長（任意で絞れるよう保存はしてある）
-    if (lengthGroup && lengthGroup !== "all") filters.push(where("lengthGroup", "==", lengthGroup));
+    if (difficulty) {
+      filters.push(where("difficulty", "==", difficulty));
+    }
+    
+    if (lengthGroup) {
+      filters.push(where("lengthGroup", "==", lengthGroup));
+    }
 
     const q = query(colRef, ...filters, limit(maxFetch));
     const snap = await getDocs(q);
@@ -98,3 +100,4 @@ export class RankingService {
     }
   }
 }
+
