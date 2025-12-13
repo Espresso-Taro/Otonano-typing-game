@@ -103,7 +103,7 @@ function hashString(str) {
 // 記号スコア（IME入力の負荷を反映）
 // 強・中・弱・基本の4段階
 function punctScore(text) {
-  // 強い記号：ペア管理・判断負荷が高い
+    // 強い記号：ペア管理・判断負荷が高い
   const strong = (text.match(/[（）「」『』［］【】＜＞”’]/g) || []).length;
 
   // 中程度：Shift必須・意味は明確
@@ -120,43 +120,57 @@ function punctScore(text) {
 }
 
 function digitCount(text) {
-  const m = text.match(/[0-9]/g);
-  return m ? m.length : 0;
+  return (text.match(/[0-9]/g) || []).length;
 }
+
 function kanjiRatio(text) {
   const total = text.length || 1;
   const kanji = (text.match(/[一-龥]/g) || []).length;
   return kanji / total;
 }
 
-// ★難易度：文章長は含めない（漢字率/記号/数字）
+/* =========================
+   難易度：4段階
+========================= */
 function difficultyByText(text) {
-  const kr = kanjiRatio(text);        // 漢字率（0〜1）
-  const pScore = punctScore(text);   // 記号スコア（重み込み）
-  const d = digitCount(text);        // 数字数
-
-  // ★文章長は一切使わない
   const score =
-    kr * 100 +        // 漢字の重み（最重要）
-    pScore * 6 +      // 記号の重み
-    d * 10;           // 数字の重み（英数切替）
+    kanjiRatio(text) * 100 +
+    punctScore(text) * 6 +
+    digitCount(text) * 10;
 
-  if (score < 25) return "easy";    // 易
-  if (score < 45) return "normal";  // 普
-  if (score < 70) return "hard";    // 難
-  return "extreme";                 // 極
+  if (score < 25) return "easy";      // 易
+  if (score < 45) return "normal";    // 普
+  if (score < 70) return "hard";      // 難
+  return "extreme";                   // 極
 }
 
-
-// ★文章長グループ：ユーザー選択で絞り込みに使う
+/* =========================
+   文章長：5段階
+========================= */
 function lengthGroupOf(len) {
-  if (len <= 20) return "xs";   // 極短
-  if (len <= 40) return "short"; // 短
-  if (len <= 80) return "medium"; // 中
-  if (len <= 140) return "long";  // 長
-  return "xl";                  // 極長
+  if (len <= 20) return "xs";        // 極短
+  if (len <= 40) return "short";     // 短
+  if (len <= 80) return "medium";    // 中
+  if (len <= 140) return "long";     // 長
+  return "xl";                       // 極長
 }
 
+function diffLabel(v) {
+  if (v === "easy") return "易";
+  if (v === "normal") return "普";
+  if (v === "hard") return "難";
+  if (v === "extreme") return "極";
+  return "-";
+}
+
+function lengthLabel(v) {
+  if (v === "xs") return "極短";
+  if (v === "short") return "短";
+  if (v === "medium") return "中";
+  if (v === "long") return "長";
+  if (v === "xl") return "極長";
+  return "-";
+}
 
 function showModal() {
   modalBackdrop.style.display = "flex";
@@ -174,24 +188,6 @@ function escapeHtml(s) {
     .replaceAll(">","&gt;")
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
-}
-
-function diffLabel(v) {
-  if (v === "easy") return "易";
-  if (v === "normal") return "普";
-  if (v === "hard") return "難";
-  if (v === "extreme") return "極";
-  return v ?? "-";
-}
-
-
-function lengthLabel(v) {
-  if (v === "xs") return "極短";
-  if (v === "short") return "短";
-  if (v === "medium") return "中";
-  if (v === "long") return "長";
-  if (v === "xl") return "極長";
-  return v ?? "-";
 }
 
 
@@ -947,6 +943,7 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
 
 
 
