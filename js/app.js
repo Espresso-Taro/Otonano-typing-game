@@ -410,6 +410,12 @@ function setNewText() {
   inputEl.value = "スタートを押してください";
   inputEl.disabled = true;
 
+  inputEl.value = "入力を開始してください";
+  inputEl.disabled = true;
+
+  // ★ 次の問題ではスタートボタンを再表示
+  startBtn.style.display = "block";
+
   // ラベル更新
   updateLabels();
 }
@@ -872,4 +878,5 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
 
