@@ -764,19 +764,19 @@ async function saveScoreToScoresCollection({ uid, userName, metrics, item }) {
   const rank = rankByScore(score);
 
   await addDoc(collection(db, "scores"), {
-    uid: user.uid,
-    userName: userMgr.getCurrentUserName(),
+    uid,                    // ← 引数を使う
+    userName,               // ← 引数を使う
     cpm: score,
-    rank, // ★追加
-    difficulty: meta.difficulty,
-    lengthGroup: meta.lengthGroup,
-    category: meta.category,
-    theme: meta.theme,
+    rank,
+    difficulty: item.difficulty,
+    lengthGroup: item.lengthGroup,
+    category: item.category,
+    theme: item.theme,
     dateKey: todayKey(),
     createdAt: serverTimestamp()
   });
-
 }
+
 
 /* =========================
    Finish handler
@@ -953,6 +953,7 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
 
 
 
