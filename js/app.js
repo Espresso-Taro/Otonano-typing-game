@@ -41,7 +41,6 @@ const auth = getAuth(app);
 const authBadge = document.getElementById("authBadge");
 const metaInfoEl = document.getElementById("metaInfo");
 
-
 const userSelect = document.getElementById("userSelect");
 const addUserBtn = document.getElementById("addUserBtn");
 const renameUserBtn = document.getElementById("renameUserBtn");
@@ -71,6 +70,7 @@ const bestByDifficultyUL = document.getElementById("bestByDifficulty");
 const compareTodayEl = document.getElementById("compareToday");
 const scoreChart = document.getElementById("scoreChart");
 const myRecentUL = document.getElementById("myRecent");
+const analyticsLabel = document.getElementById("analyticsLabel");
 
 const modalBackdrop = document.getElementById("resultModalBackdrop");
 const closeModalBtn = document.getElementById("closeModalBtn");
@@ -81,6 +81,22 @@ const mCPM = document.getElementById("mCPM");
 const mTimeSec = document.getElementById("mTimeSec");
 const mLen = document.getElementById("mLen");
 const mMeta = document.getElementById("mMeta");
+
+/* =========================
+   表示用：難度タブ（ランキング/分析）
+========================= */
+let activeDiffTab = "normal"; // easy/normal/hard
+
+function setActiveDiffTab(diff) {
+  if (!diff) return;
+  activeDiffTab = diff;
+
+  document.querySelectorAll(".diffTabs").forEach(group => {
+    group.querySelectorAll(".diffTab").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.diff === activeDiffTab);
+    });
+  });
+}
 
 /* =========================
    Utils
@@ -115,7 +131,7 @@ function hashString(str) {
 // 記号スコア（IME入力の負荷を反映）
 // 強・中・弱・基本の4段階
 function punctScore(text) {
-    // 強い記号：ペア管理・判断負荷が高い
+  // 強い記号：ペア管理・判断負荷が高い
   const strong = (text.match(/[（）「」『』［］【】＜＞”’]/g) || []).length;
 
   // 中程度：Shift必須・意味は明確
@@ -142,7 +158,7 @@ function kanjiRatio(text) {
 }
 
 /* =========================
-   難易度：3段階
+   難易度：3段階（出題用）
 ========================= */
 function difficultyByText(text) {
   const score =
@@ -161,7 +177,6 @@ function diffLabel(v) {
   if (v === "hard") return "難";
   return "-";
 }
-
 
 /* =========================
    文章長：5段階
@@ -200,7 +215,6 @@ function escapeHtml(s) {
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
 }
-
 
 /* =========================
    Services
@@ -257,7 +271,7 @@ function buildIndices(raw) {
       const len = (typeof x.length === "number") ? x.length : x.text.length;
 
       const difficulty = difficultyByText(x.text);  // easy/normal/hard
-      const lengthGroup = lengthGroupOf(len);       // short/medium/long
+      const lengthGroup = lengthGroupOf(len);       // xs/short/medium/long/xl
 
       return {
         genre: x.genre ?? "",
@@ -357,7 +371,7 @@ function applyThemeOptionsByCategory() {
 
 function getActiveFilters() {
   const daily = dailyThemeEl.checked && !!dailyTheme;
-  const difficulty = difficultyEl.value;
+  const difficulty = difficultyEl.value;     // 出題用
   const lengthGroup = lengthGroupEl.value;
   const category = daily ? "all" : categoryEl.value;
   const theme = daily ? dailyTheme : themeEl.value;
@@ -476,7 +490,7 @@ function setNewText() {
   const pick = pickNextItem(pool);
   currentItem = pick;
 
-  // ★ここでメタ情報を表示
+  // メタ情報表示（出題）
   const cat = pick.category ?? "-";
   const theme = pick.theme ?? "-";
   metaInfoEl.textContent = `${cat} / ${theme}`;
@@ -492,38 +506,47 @@ function setNewText() {
   updateLabels();
 }
 
-
 /* =========================
    Ranking + Analytics
 ========================= */
 function updateLabels() {
-  const { difficulty, lengthGroup, category, theme } = getActiveFilters();
-
-  dailyRankLabel.textContent =
-    `🏆 今日のテーマ「${dailyTheme ?? "—"}」TOP10（Score順）`;
-
-  const scope = rankScopeEl.value;
-  const diffTxt = diffLabel(difficulty);
+  const { lengthGroup, category, theme, daily } = getActiveFilters();
   const lenTxt = lengthLabel(lengthGroup);
+  const diffTxt = diffLabel(activeDiffTab);
 
+  // 今日のテーマランキング：テーマは必ず dailyTheme
+  const dailyThemeTxt = dailyTheme ?? "—";
+  dailyRankLabel.textContent =
+    `今日：${todayKey()} / 難度：${diffTxt} / 長さ：${lenTxt} / テーマ：${dailyThemeTxt} / TOP10（Score順）`;
+
+  // ランキング：scope によってテーマが変わる
+  const scope = rankScopeEl.value;
   if (scope === "overall") {
     rankLabel.textContent = `全体TOP10（難度：${diffTxt} / 長さ：${lenTxt}）`;
   }
   if (scope === "category") {
-    rankLabel.textContent = `カテゴリ「${category === "all" ? "すべて" : category}」TOP10（難度：${diffTxt} / 長さ：${lenTxt}）`;
+    const catTxt = (daily ? "（今日テーマ固定）" : (category === "all" ? "すべて" : category));
+    rankLabel.textContent = `カテゴリ：${catTxt} TOP10（難度：${diffTxt} / 長さ：${lenTxt}）`;
   }
   if (scope === "theme") {
-    rankLabel.textContent = `テーマ「${theme === "all" ? "すべて" : theme}」TOP10（難度：${diffTxt} / 長さ：${lenTxt}）`;
+    const thTxt = (daily ? dailyThemeTxt : (theme === "all" ? "すべて" : theme));
+    rankLabel.textContent = `テーマ：${thTxt} TOP10（難度：${diffTxt} / 長さ：${lenTxt}）`;
+  }
+
+  // 分析ラベル（現在の表示条件）
+  if (analyticsLabel) {
+    const thTxt = daily ? dailyThemeTxt : (theme === "all" ? "すべて" : theme);
+    analyticsLabel.textContent = `難度：${diffTxt} / 長さ：${lenTxt} / テーマ：${thTxt}`;
   }
 }
 
 async function loadDailyRanking() {
   try {
-    const { difficulty, lengthGroup } = getActiveFilters();
+    const { lengthGroup } = getActiveFilters();
     const rows = await rankingSvc.loadDailyTheme({
       theme: dailyTheme,
       dateKey: todayKey(),
-      difficulty,
+      difficulty: activeDiffTab,
       lengthGroup
     });
     rankingSvc.renderList(dailyRankingUL, rows);
@@ -535,13 +558,16 @@ async function loadDailyRanking() {
 
 async function loadRanking() {
   try {
-    const { difficulty, lengthGroup, category, theme } = getActiveFilters();
+    const { lengthGroup, category, theme, daily } = getActiveFilters();
     const scope = rankScopeEl.value;
 
+    // 今日テーマ固定なら theme が dailyTheme に置き換わっている
+    const th = daily ? dailyTheme : theme;
+
     let rows = [];
-    if (scope === "overall") rows = await rankingSvc.loadOverall({ difficulty, lengthGroup });
-    if (scope === "category") rows = await rankingSvc.loadByCategory({ category, difficulty, lengthGroup });
-    if (scope === "theme") rows = await rankingSvc.loadByTheme({ theme, difficulty, lengthGroup });
+    if (scope === "overall") rows = await rankingSvc.loadOverall({ difficulty: activeDiffTab, lengthGroup });
+    if (scope === "category") rows = await rankingSvc.loadByCategory({ category, difficulty: activeDiffTab, lengthGroup });
+    if (scope === "theme") rows = await rankingSvc.loadByTheme({ theme: th, difficulty: activeDiffTab, lengthGroup });
 
     rankingSvc.renderList(rankingUL, rows);
   } catch (e) {
@@ -558,32 +584,19 @@ function avg(arr) {
   return Math.round(arr.reduce((s, x) => s + x, 0) / arr.length);
 }
 
-/* ==== Analytics: 難易度別ベスト ==== */
-function renderBestByDifficulty(histories) {
+function renderBestForSelectedDifficulty(histories) {
   bestByDifficultyUL.innerHTML = "";
-
-  const diffs = ["easy", "normal", "hard"];
-  const best = {};
-  diffs.forEach(d => best[d] = null);
-
-  for (const h of histories) {
-    const d = h.difficulty;
-    if (!(d in best)) continue;
-    if (best[d] === null || h.cpm > best[d]) {
-      best[d] = h.cpm;
-    }
-  }
-
-  diffs.forEach(d => {
+  if (!histories.length) {
     const li = document.createElement("li");
-    li.textContent =
-      best[d] === null
-        ? `${diffLabel(d)}：まだ履歴がありません`
-        : `${diffLabel(d)}：TOP スコア ${best[d]}`;
+    li.textContent = `${diffLabel(activeDiffTab)}：まだ履歴がありません`;
     bestByDifficultyUL.appendChild(li);
-  });
+    return;
+  }
+  const best = Math.max(...histories.map(h => Number(h.cpm ?? 0)));
+  const li = document.createElement("li");
+  li.textContent = `${diffLabel(activeDiffTab)}：TOP スコア ${best}`;
+  bestByDifficultyUL.appendChild(li);
 }
-
 
 function renderRecent(histories) {
   myRecentUL.innerHTML = "";
@@ -596,9 +609,8 @@ function renderRecent(histories) {
   }
   for (const h of slice) {
     const li = document.createElement("li");
-    const lenTxt = h.lengthGroup ? `｜${lengthLabel(h.lengthGroup)}` : "";
     li.textContent =
-      `${h.dateKey}｜${diffLabel(h.difficulty)}｜${lengthLabel(h.lengthGroup)}｜${h.rank ?? "-" }｜${h.cpm}`;
+      `${h.dateKey}｜${diffLabel(h.difficulty)}｜${lengthLabel(h.lengthGroup)}｜${h.theme ?? "-"}｜${h.rank ?? "-"}｜${h.cpm}`;
     myRecentUL.appendChild(li);
   }
 }
@@ -728,29 +740,32 @@ async function loadMyAnalytics(uid, userName) {
         dateKey: d.dateKey ?? "",
         difficulty: d.difficulty ?? "",
         lengthGroup: d.lengthGroup ?? "",
+        theme: d.theme ?? "",
+        rank: d.rank ?? "-",
         cpm: Number(d.cpm ?? 0),
         createdAtMs: ms
       });
     });
 
-    const mine = rows.filter(r => r.userName === userName);
+    const mineAll = rows.filter(r => r.userName === userName);
 
     // 新しい順
-    mine.sort((a, b) => (b.createdAtMs ?? 0) - (a.createdAtMs ?? 0));
+    mineAll.sort((a, b) => (b.createdAtMs ?? 0) - (a.createdAtMs ?? 0));
 
-    renderRecent(mine);
-    renderBestByDifficulty(mine);
+    // ★タブ難度で絞る（分析表示）
+    const view = mineAll.filter(r => r.difficulty === activeDiffTab);
 
-    // ★難易度選択で絞った系列をグラフ化（難易度別保存に対応）
-    const selectedDiff = difficultyEl.value; // easy/normal/hard/extream
-    let view = mine;
-    view = mine.filter(r => r.difficulty === selectedDiff);
+    renderRecent(view);
+    renderBestForSelectedDifficulty(view);
+
     const series = buildDailyBestSeries(view);
     drawScoreChart(series);
 
     const t = summarizeTodayScore(view);
     const a7 = summarize7daysScore(view);
     formatCompareScore(t, a7);
+
+    updateLabels();
   } catch (e) {
     console.error("analytics load error", e);
     bestByDifficultyUL.innerHTML = "<li>分析の読み込みに失敗しました</li>";
@@ -768,8 +783,8 @@ async function saveScoreToScoresCollection({ uid, userName, metrics, item }) {
   const rank = rankByScore(score);
 
   await addDoc(collection(db, "scores"), {
-    uid,                    // ← 引数を使う
-    userName,               // ← 引数を使う
+    uid,
+    userName,
     cpm: score,
     rank,
     difficulty: item.difficulty,
@@ -780,7 +795,6 @@ async function saveScoreToScoresCollection({ uid, userName, metrics, item }) {
     createdAt: serverTimestamp()
   });
 }
-
 
 /* =========================
    Finish handler
@@ -803,7 +817,8 @@ async function onFinished(metrics, meta) {
   }
 
   // モーダル
-  mRank.textContent = metrics.rank;
+  const rank = rankByScore(metrics.cpm);
+  mRank.textContent = rank;
   mCPM.textContent = String(metrics.cpm);
   mTimeSec.textContent = String(metrics.seconds ?? "-");
   mLen.textContent = String(metrics.length ?? "-");
@@ -812,7 +827,7 @@ async function onFinished(metrics, meta) {
   const th = meta?.theme ?? "-";
   const df = meta?.difficulty ?? "-";
   const lg = meta?.lengthGroup ?? "-";
-  mMeta.textContent = `ユーザー：${userName} / 難易度：${diffLabel(df)} / 文章長：${lengthLabel(lg)} / カテゴリ：${cat} / テーマ：${th} / 日付：${todayKey()}`;
+  mMeta.textContent = `ユーザー：${userName} / 難度：${diffLabel(df)} / 文長：${lengthLabel(lg)} / テーマ：${th} / 日付：${todayKey()}`;
 
   showModal();
 
@@ -848,7 +863,9 @@ dailyThemeEl.addEventListener("change", () => {
   if (user) loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
 
+// 出題難度の変更（※タブも同じ難度に同期させる）
 difficultyEl.addEventListener("change", () => {
+  setActiveDiffTab(difficultyEl.value); // タブ同期
   setNewText();
   updateLabels();
   loadDailyRanking();
@@ -913,6 +930,27 @@ document.addEventListener("keydown", (e) => {
 });
 
 /* =========================
+   ★難度タブ（3箇所）イベント：全部同期して再描画
+========================= */
+function attachDiffTabs() {
+  document.querySelectorAll(".diffTab").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const diff = btn.dataset.diff;
+      setActiveDiffTab(diff);
+
+      updateLabels();
+      await loadDailyRanking();
+      await loadRanking();
+
+      const user = auth.currentUser;
+      if (user) {
+        await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
+      }
+    });
+  });
+}
+
+/* =========================
    Init
 ========================= */
 async function init() {
@@ -935,9 +973,14 @@ async function init() {
   buildIndices(raw);
   hydrateSelects();
 
-  applyThemeOptionsByCategory();
+  // 初期タブ難度：出題難度に合わせる
+  setActiveDiffTab(difficultyEl.value);
 
+  applyThemeOptionsByCategory();
   setNewText();
+
+  // 難度タブのクリックを有効化
+  attachDiffTabs();
 
   await loadDailyRanking();
   await loadRanking();
@@ -957,24 +1000,3 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
