@@ -109,7 +109,34 @@ const pendingList = document.getElementById("pendingList");
    Services
 ========================= */
 const userMgr = new UserManager(db);
-const engine = new TypingEngine();
+const engine = new TypingEngine({
+  textEl,
+  inputEl,
+  resultEl: modalMsgEl, // 結果表示先（既存UIを再利用）
+  onFinish: async ({ metrics }) => {
+    const cpm = metrics.cpm;
+
+    try {
+      await submitScore(cpm);
+    } catch (e) {
+      console.error("submitScore failed", e);
+      showModal("エラー", "スコアの保存に失敗しました。");
+      return;
+    }
+
+    showModal("結果", `CPM: ${cpm}`);
+
+    await loadDailyRanking();
+    await loadRanking();
+    await loadGroupRanking();
+
+    const user = auth.currentUser;
+    if (user) {
+      await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
+    }
+  }
+});
+
 const rankingSvc = new RankingService(db);
 const groupSvc = new GroupService(db);
 
@@ -298,7 +325,11 @@ function setNewText() {
 
   currentItem = pick;
   textEl.textContent = pick.text || pick.sentence || "";
-  engine.reset(textEl.textContent);
+  engine.setTarget(textEl.textContent, {
+    difficulty: difficultyEl.value,
+    daily: dailyThemeEl?.checked ?? false
+  });
+
 
   inputEl.value = "";
   inputEl.disabled = false;
@@ -484,7 +515,7 @@ async function submitScore(cpm) {
 function bindTyping() {
   inputEl.addEventListener("input", async () => {
     const v = inputEl.value || "";
-    const result = engine.input(v);
+    const result = engine.attach();
     if (result.done) {
       inputEl.disabled = true;
       const cpm = result.cpm;
@@ -1060,4 +1091,5 @@ onAuthStateChanged(auth, async (user) => {
     await refreshMyGroups();
   }
 });
+
 
