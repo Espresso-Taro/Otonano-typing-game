@@ -516,9 +516,10 @@ function updateLabels() {
     dailyRankingTitle.textContent = `今日のテーマランキング（固定表示：${dailyThemeTxt}）`;
   }
 
-  // ★赤枠の補助ラベルは表示しない（空にする）
+  // 🔴 赤枠は完全削除（表示しない）
   if (dailyRankLabel) {
     dailyRankLabel.textContent = "";
+    dailyRankLabel.style.display = "none";
   }
 
   // ★ランキング範囲の選択は廃止 → 常に「全体ランキング」
@@ -530,9 +531,10 @@ function updateLabels() {
     analyticsTitle.textContent = `入力分析（選択ユーザー：${userName}）`;
   }
 
-  // ★赤枠の条件ラベルは表示しない（空にする）
+  // 🔴 赤枠は完全削除（表示しない）
   if (analyticsLabel) {
     analyticsLabel.textContent = "";
+    analyticsLabel.style.display = "none";
   }
 }
 
@@ -619,10 +621,9 @@ function renderRecent(histories) {
     const lg = lengthLabel(h.lengthGroup);
     const theme = h.theme ?? "-";
 
-    // ★「意味付き」表記に変更
+    // 🟢 ユーザー名は表示しない（意味付き表記に統一）
     li.textContent =
-      `${userName}` +
-      `｜ランク：${rank}` +
+      `ランク：${rank}` +
       `｜スコア：${score}` +
       `｜長さ：${lg}` +
       `｜テーマ：${theme}`;
