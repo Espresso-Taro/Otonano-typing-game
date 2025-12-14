@@ -302,20 +302,30 @@
         <button type="button" class="diffTab active" data-diff="normal">普</button>
         <button type="button" class="diffTab" data-diff="hard">難</button>
       </div>
-
+  
       <div class="split">
+        <!-- 今日の課題ランキング -->
         <div class="card" style="border-color:#eee;">
           <h3 style="margin-top:0;">今日の課題ランキング</h3>
           <div class="muted" id="dailyRankLabel" style="margin-bottom: 8px;"></div>
           <ul id="dailyRanking"></ul>
         </div>
-
+      
+        <!-- 全国ランキング -->
         <div class="card" style="border-color:#eee;">
-          <h3 style="margin-top:0;">上位10</h3>
+          <h3 style="margin-top:0;">全国ランキング（上位10）</h3>
           <div id="overallLabel" class="muted" style="margin-bottom: 8px;"></div>
           <ul id="ranking" style="margin-top: 10px;"></ul>
         </div>
       </div>
+      
+      <!-- グループランキング（参加中のみ表示：app.js 側で制御） -->
+      <div class="card" id="groupRankingBox" style="border-color:#eee; margin-top:12px; display:none;">
+        <h3 style="margin-top:0;">グループランキング（上位10）</h3>
+        <div id="groupRankLabel" class="muted" style="margin-bottom: 8px;"></div>
+        <ul id="groupRanking"></ul>
+      </div>
+
 
       <div class="card" style="border-color:#eee; margin-top:12px;">
         <h3 id="analyticsTitle" style="margin-top:0;">入力分析（-）</h3>
@@ -380,3 +390,4 @@
   <script type="module" src="./js/app.js"></script>
 </body>
 </html>
+
