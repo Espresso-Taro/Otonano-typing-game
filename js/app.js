@@ -269,27 +269,15 @@ function initFilterOptions() {
 
   // カテゴリ
   if (categoryEl) {
-    const set = new Set(State.allItems.map(x => x.category).filter(Boolean));
-    categoryEl.innerHTML = `<option value="all">すべて</option>`;
-    for (const v of Array.from(set).sort()) {
-      const opt = document.createElement("option");
-      opt.value = v;
-      opt.textContent = v;
-      categoryEl.appendChild(opt);
-    }
+    categoryEl.addEventListener("change", () => {
+      updateThemeOptionsByCategory();
+      buildPool();
+      setNewText();
+    });
   }
 
-  // テーマ
-  if (themeEl) {
-    const set = new Set(State.allItems.map(x => x.theme).filter(Boolean));
-    themeEl.innerHTML = `<option value="all">すべて</option>`;
-    for (const v of Array.from(set).sort()) {
-      const opt = document.createElement("option");
-      opt.value = v;
-      opt.textContent = v;
-      themeEl.appendChild(opt);
-    }
-  }
+  // テーマ（初期はカテゴリ all）
+  updateThemeOptionsByCategory();
 }
 
 /* =========================================================
@@ -1230,6 +1218,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
