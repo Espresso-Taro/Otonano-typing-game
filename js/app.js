@@ -610,15 +610,15 @@ function updateLabels() {
   const scope = rankScopeEl ? rankScopeEl.value : "overall";
   if (rankLabel) {
     if (scope === "overall") {
-      rankLabel.textContent = `全体（難度：${diffTxt} / 長さ：${lenTxt}）`;
+      rankLabel.textContent = `全体（難度：${diffTxt}）`;
     }
     if (scope === "category") {
       const catTxt = (daily ? "（今日テーマ固定）" : (category === "all" ? "すべて" : category));
-      rankLabel.textContent = `カテゴリ：${catTxt}（難度：${diffTxt} / 長さ：${lenTxt}）`;
+      rankLabel.textContent = `カテゴリ：${catTxt}（難度：${diffTxt}）`;
     }
     if (scope === "theme") {
       const thTxt = (daily ? dailyThemeTxt : (theme === "all" ? "すべて" : theme));
-      rankLabel.textContent = `テーマ：${thTxt}（難度：${diffTxt} / 長さ：${lenTxt}）`;
+      rankLabel.textContent = `テーマ：${thTxt}（難度：${diffTxt}）`;
     }
   }
 
@@ -661,16 +661,15 @@ async function loadRanking() {
     if (scope === "overall") {
       rows = await rankingSvc.loadOverall({
         difficulty: activeDiffTab,
-        lengthGroup,
         groupId: currentGroupId ? currentGroupId : null
       });
     }
+
     
     if (scope === "category") {
       rows = await rankingSvc.loadByCategory({
         category,
         difficulty: activeDiffTab,
-        lengthGroup,
         groupId: currentGroupId ? currentGroupId : null
       });
     }
@@ -679,10 +678,10 @@ async function loadRanking() {
       rows = await rankingSvc.loadByTheme({
         theme: th,
         difficulty: activeDiffTab,
-        lengthGroup,
         groupId: currentGroupId ? currentGroupId : null
       });
     }
+
 
 
     rankingSvc.renderList(rankingUL, rows);
@@ -1403,6 +1402,7 @@ onAuthStateChanged(auth, async (user) => {
     await refreshMyGroups();
   }
 });
+
 
 
 
