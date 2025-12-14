@@ -51,17 +51,18 @@ export class UserManager {
     this.onChange?.(this.current);
   }
 
-  _bindEvents() {
-    this.selectEl.addEventListener("change", () => {
-      this.current = this.selectEl.value;
-      localStorage.setItem(this.storageLastKey, this.current);
-      this.onChange?.(this.current);
-    });
-
+_bindEvents() {
+  if (this.addBtn) {
     this.addBtn.addEventListener("click", () => this.addUser());
+  }
+  if (this.renameBtn) {
     this.renameBtn.addEventListener("click", () => this.renameUser());
+  }
+  if (this.deleteBtn) {
     this.deleteBtn.addEventListener("click", () => this.deleteUser());
   }
+}
+
 
   /* =========================
      正規化・検証
@@ -260,3 +261,4 @@ export class UserManager {
     this.onChange?.(this.current);
   }
 }
+
