@@ -7,6 +7,9 @@ import {
   limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+/* =========================
+   Utils
+========================= */
 function lengthLabel(v) {
   if (v === "xs") return "極短";
   if (v === "short") return "短";
@@ -16,11 +19,17 @@ function lengthLabel(v) {
   return "-";
 }
 
+/* =========================
+   Ranking Service
+========================= */
 export class RankingService {
   constructor({ db }) {
     this.db = db;
   }
 
+  /* -------------------------
+     Firestore fetch
+  ------------------------- */
   async _fetchScores({
     theme = null,
     category = null,
@@ -42,10 +51,15 @@ export class RankingService {
     const snap = await getDocs(q);
 
     const rows = [];
-    snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+    snap.forEach(docu => {
+      rows.push({ id: docu.id, ...docu.data() });
+    });
     return rows;
   }
 
+  /* -------------------------
+     Sort + Top10
+  ------------------------- */
   _sortAndTop10(rows) {
     return rows
       .slice()
@@ -53,6 +67,7 @@ export class RankingService {
         const ac = Number(a.cpm ?? -999999);
         const bc = Number(b.cpm ?? -999999);
         if (bc !== ac) return bc - ac;
+
         const at = a.createdAt?.toMillis?.() ?? 0;
         const bt = b.createdAt?.toMillis?.() ?? 0;
         return bt - at;
@@ -60,8 +75,35 @@ export class RankingService {
       .slice(0, 10);
   }
 
+  /* -------------------------
+     Public loaders
+  ------------------------- */
   async loadOverall({ difficulty, lengthGroup }) {
     const rows = await this._fetchScores({ difficulty, lengthGroup });
+    return this._sortAndTop10(rows);
+  }
+
+  async loadByCategory({ category, difficulty, lengthGroup }) {
+    if (!category || category === "all") {
+      return this.loadOverall({ difficulty, lengthGroup });
+    }
+    const rows = await this._fetchScores({
+      category,
+      difficulty,
+      lengthGroup
+    });
+    return this._sortAndTop10(rows);
+  }
+
+  async loadByTheme({ theme, difficulty, lengthGroup }) {
+    if (!theme || theme === "all") {
+      return this.loadOverall({ difficulty, lengthGroup });
+    }
+    const rows = await this._fetchScores({
+      theme,
+      difficulty,
+      lengthGroup
+    });
     return this._sortAndTop10(rows);
   }
 
@@ -76,8 +118,12 @@ export class RankingService {
     return this._sortAndTop10(rows);
   }
 
+  /* -------------------------
+     Render
+  ------------------------- */
   renderList(ul, rows) {
     ul.innerHTML = "";
+
     if (!rows.length) {
       const li = document.createElement("li");
       li.textContent = "まだスコアがありません。";
@@ -87,12 +133,21 @@ export class RankingService {
 
     rows.forEach((r, i) => {
       const li = document.createElement("li");
+
+      const userName = r.userName ?? "-";
+      const rank = r.rank ?? "-";
+      const score = Number(r.cpm ?? 0);
+      const lg = lengthLabel(r.lengthGroup);
+      const theme = r.theme ?? "-";
+
+      // ★意味付き・統一フォーマット
       li.textContent =
-        `${i + 1}位：${r.userName ?? "-"}` +
-        `｜ランク：${r.rank ?? "-"}` +
-        `｜スコア：${Number(r.cpm ?? 0)}` +
-        `｜長さ：${lengthLabel(r.lengthGroup)}` +
-        `｜テーマ：${r.theme ?? "-"}`;
+        `${i + 1}位：${userName}` +
+        `｜ランク：${rank}` +
+        `｜スコア：${score}` +
+        `｜長さ：${lg}` +
+        `｜テーマ：${theme}`;
+
       ul.appendChild(li);
     });
   }
