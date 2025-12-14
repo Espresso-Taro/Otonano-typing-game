@@ -547,8 +547,7 @@ async function loadDailyRanking() {
     const rows = await rankingSvc.loadDailyTheme({
       theme: dailyTheme,
       dateKey: todayKey(),
-      difficulty: activeDiffTab,
-      lengthGroup
+      difficulty: activeDiffTab
     });
     rankingSvc.renderList(dailyRankingUL, rows);
   } catch (e) {
@@ -563,8 +562,7 @@ async function loadRanking() {
 
     // ★ランキング範囲の選択は廃止 → 常に全体
     const rows = await rankingSvc.loadOverall({
-      difficulty: activeDiffTab,
-      lengthGroup
+      difficulty: activeDiffTab
     });
 
     rankingSvc.renderList(rankingUL, rows);
@@ -987,5 +985,6 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
 
 
