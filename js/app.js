@@ -831,67 +831,86 @@ async function onFinished(metrics, meta) {
 }
 
 /* =========================
-   Events
+   Events（null安全版）
 ========================= */
-skipBtn.addEventListener("click", () => {
-  hideModal();
-  setNewText();
-});
+if (skipBtn) {
+  skipBtn.addEventListener("click", () => {
+    hideModal();
+    setNewText();
+  });
+}
 
-startBtn.addEventListener("click", async () => {
-  hideModal();
-  await startWithCountdown();
-});
+if (startBtn) {
+  startBtn.addEventListener("click", async () => {
+    hideModal();
+    await startWithCountdown();
+  });
+}
 
-dailyThemeEl.addEventListener("change", () => {
-  applyThemeOptionsByCategory();
-  setNewText();
-  updateLabels();
-  loadDailyRanking();
-  loadRanking();
-  const user = auth.currentUser;
-  if (user) loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
-});
+if (dailyThemeEl) {
+  dailyThemeEl.addEventListener("change", () => {
+    applyThemeOptionsByCategory();
+    setNewText();
+    updateLabels();
+    loadDailyRanking();
+    loadRanking();
+    const user = auth.currentUser;
+    if (user) loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
+  });
+}
 
 // ★出題難度の変更：成績・分析タブには連動しない
-difficultyEl.addEventListener("change", () => {
-  setNewText();
-});
+if (difficultyEl) {
+  difficultyEl.addEventListener("change", () => {
+    setNewText();
+  });
+}
 
-// 出題側の長さ変更：ランキング・分析の長さにも反映（同じlengthGroupElを使っているため）
-lengthGroupEl.addEventListener("change", () => {
-  setNewText();
-  updateLabels();
-  loadDailyRanking();
-  loadRanking();
-  const user = auth.currentUser;
-  if (user) loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
-});
+// 出題側の長さ変更：ランキング・分析の長さにも反映
+if (lengthGroupEl) {
+  lengthGroupEl.addEventListener("change", () => {
+    setNewText();
+    updateLabels();
+    loadDailyRanking();
+    loadRanking();
+    const user = auth.currentUser;
+    if (user) loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
+  });
+}
 
-categoryEl.addEventListener("change", () => {
-  applyThemeOptionsByCategory();
-  setNewText();
-  updateLabels();
-  loadDailyRanking();
-  loadRanking();
-  const user = auth.currentUser;
-  if (user) loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
-});
+if (categoryEl) {
+  categoryEl.addEventListener("change", () => {
+    applyThemeOptionsByCategory();
+    setNewText();
+    updateLabels();
+    loadDailyRanking();
+    loadRanking();
+    const user = auth.currentUser;
+    if (user) loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
+  });
+}
 
-themeEl.addEventListener("change", () => {
-  setNewText();
-  updateLabels();
-  loadDailyRanking();
-  loadRanking();
-  const user = auth.currentUser;
-  if (user) loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
-});
+if (themeEl) {
+  themeEl.addEventListener("change", () => {
+    setNewText();
+    updateLabels();
+    loadDailyRanking();
+    loadRanking();
+    const user = auth.currentUser;
+    if (user) loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
+  });
+}
 
-closeModalBtn.addEventListener("click", () => hideModal());
-nextBtn.addEventListener("click", () => {
-  hideModal();
-  setNewText();
-});
+if (closeModalBtn) {
+  closeModalBtn.addEventListener("click", () => hideModal());
+}
+
+if (nextBtn) {
+  nextBtn.addEventListener("click", () => {
+    hideModal();
+    setNewText();
+  });
+}
 
 userMgr.onChange = async () => {
   const user = auth.currentUser;
@@ -899,12 +918,12 @@ userMgr.onChange = async () => {
   updateLabels();
 };
 
-// Spaceキーでスタート
+// Spaceキーでスタート（document は null にならない）
 document.addEventListener("keydown", (e) => {
   if (e.code !== "Space") return;
   if (!currentItem) return;
   if (engine.started || countdownTimer) return;
-  if (!inputEl.disabled) return;
+  if (!inputEl || !inputEl.disabled) return;
 
   e.preventDefault();
   startWithCountdown();
@@ -936,6 +955,7 @@ function attachUnifiedDiffTabs() {
     });
   });
 }
+
 
 /* =========================
    Init
@@ -986,3 +1006,4 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
