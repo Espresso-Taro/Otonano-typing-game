@@ -103,13 +103,16 @@ export class RankingService {
       return;
     }
 
-    rows.forEach((r, i) => {
+    rows.forEach((r) => {
       const li = document.createElement("li");
+      const userName = r.userName ?? "no-name";
       const rank = r.rank ?? "-";
+      const score = Number(r.cpm ?? 0);
       const lg = lengthLabel(r.lengthGroup);
       const theme = r.theme ?? "-";
-      const cpm = Number(r.cpm ?? 0);
-      li.textContent = `${i + 1}. ${r.userName ?? "no-name"}｜${rank}｜${lg}｜${theme}｜Score ${cpm}`;
+
+      // ★統一フォーマット
+      li.textContent = `${userName}｜${rank}｜${score}｜${lg}｜${theme}`;
       ul.appendChild(li);
     });
   }
