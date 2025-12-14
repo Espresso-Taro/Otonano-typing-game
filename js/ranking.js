@@ -7,6 +7,10 @@ import {
   limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+import {
+  getAuth
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
 /* =========================
    Utils
 ========================= */
@@ -25,6 +29,7 @@ function lengthLabel(v) {
 export class RankingService {
   constructor({ db }) {
     this.db = db;
+    this.auth = getAuth();
   }
 
   /* -------------------------
@@ -131,6 +136,8 @@ export class RankingService {
       return;
     }
 
+    const myUid = this.auth.currentUser?.uid ?? null;
+
     rows.forEach((r, i) => {
       const li = document.createElement("li");
 
@@ -147,6 +154,11 @@ export class RankingService {
         `｜スコア：${score}` +
         `｜長さ：${lg}` +
         `｜テーマ：${theme}`;
+
+      // ★自分の行なら太字
+      if (myUid && r.uid === myUid) {
+        li.classList.add("ranking-me");
+      }
 
       ul.appendChild(li);
     });
