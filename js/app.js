@@ -128,6 +128,24 @@ function setActiveDiffTab(diff, { syncDifficultySelect = false } = {}) {
 /* =========================
    Utils
 ========================= */
+function getDailyLengthByDifficulty(diff) {
+  if (diff === "easy") return "xs";       // 易 → 極短
+  if (diff === "normal") return "medium"; // 普 → 中
+  if (diff === "hard") return "xl";       // 難 → 極長
+  return null;
+}
+
+function pickDailyItem(pool, difficulty, dateKey) {
+  if (!pool.length) return null;
+  const seed = `${dateKey}-${difficulty}`;
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  const idx = hash % pool.length;
+  return pool[idx];
+}
+
 function rankByScore(score) {
   if (score >= 800) return "SSS";
   if (score >= 700) return "SS";
@@ -381,6 +399,11 @@ function hydrateSelects() {
 function applyThemeOptionsByCategory() {
   // dailyThemeEl が無いHTMLの場合は「今日テーマ固定」機能をオフとして扱う
   const daily = !!(dailyThemeEl && dailyThemeEl.checked && !!dailyTheme);
+  // ★今日の課題中は文章長を固定（操作不可）
+  if (lengthGroupEl) {
+    lengthGroupEl.disabled = daily;
+  }
+
 
   if (daily) {
     themeEl.disabled = true;
@@ -421,12 +444,19 @@ function applyThemeOptionsByCategory() {
 
 function getActiveFilters() {
   const daily = !!(dailyThemeEl && dailyThemeEl.checked && !!dailyTheme);
-  const difficulty = difficultyEl.value;     // 出題用
-  const lengthGroup = lengthGroupEl.value;
+  const difficulty = difficultyEl.value;
+
+  // ★今日の課題中は lengthGroup を難度で強制
+  const lengthGroup = daily
+    ? getDailyLengthByDifficulty(difficulty)
+    : lengthGroupEl.value;
+
   const category = daily ? "all" : categoryEl.value;
   const theme = daily ? dailyTheme : themeEl.value;
+
   return { daily, difficulty, lengthGroup, category, theme };
 }
+
 
 function filterPool() {
   const { daily, difficulty, lengthGroup, category, theme } = getActiveFilters();
@@ -537,7 +567,13 @@ function setNewText() {
     return;
   }
 
-  const pick = pickNextItem(pool);
+  const { daily, difficulty } = getActiveFilters();
+  
+  // ★今日の課題は「日付×難度」で1文固定
+  const pick = daily
+    ? pickDailyItem(pool, difficulty, todayKey())
+    : pickNextItem(pool);
+
   currentItem = pick;
 
   // メタ情報表示（出題）
@@ -594,7 +630,7 @@ function updateLabels() {
 
 async function loadDailyRanking() {
   try {
-    const { lengthGroup } = getActiveFilters();
+    const { lengthGroup, difficulty } = getActiveFilters();
 
     // rankingSvc.loadDailyTheme があなたの ranking.js に存在する前提のコード（元のまま）
     // もし存在しない場合は、次ステップで ranking.js 側を合わせます
@@ -1354,6 +1390,7 @@ onAuthStateChanged(auth, async (user) => {
     await refreshMyGroups();
   }
 });
+
 
 
 
