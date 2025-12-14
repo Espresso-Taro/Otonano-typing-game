@@ -1256,9 +1256,17 @@ if (dailyThemeEl) {
 
 
 
-// 出題難度の変更 → 統合タブにも反映
 difficultyEl.addEventListener("change", () => {
   setActiveDiffTab(difficultyEl.value); // 表示側難度も同じにする
+
+  // ★ 今日の課題中は長さUIも追従させる
+  if (dailyThemeEl && dailyThemeEl.checked && lengthGroupEl) {
+    const forced = getDailyLengthByDifficulty(difficultyEl.value);
+    if (forced) {
+      lengthGroupEl.value = forced;
+    }
+  }
+
   setNewText();
   updateLabels();
   loadDailyRanking();
@@ -1266,6 +1274,7 @@ difficultyEl.addEventListener("change", () => {
   const user = auth.currentUser;
   if (user) loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
 
 lengthGroupEl.addEventListener("change", () => {
   setNewText();
@@ -1412,6 +1421,7 @@ onAuthStateChanged(auth, async (user) => {
     await refreshMyGroups();
   }
 });
+
 
 
 
