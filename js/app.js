@@ -583,28 +583,27 @@ function avg(arr) {
 }
 
 function renderBestForSelectedDifficulty(histories) {
-  bestByDifficultyUL.innerHTML = "";
   if (!histories.length) {
-    const li = document.createElement("li");
-    li.textContent = "まだ履歴がありません";
-    bestByDifficultyUL.appendChild(li);
+    document.getElementById("bestRank").textContent = "-";
+    document.getElementById("bestScore").textContent = "-";
+    document.getElementById("bestLength").textContent = "-";
+    document.getElementById("bestTheme").textContent = "-";
     return;
   }
 
-  // ★「意味付き」表記に変更（ランク/スコア/長さ/テーマ）
   let best = histories[0];
   for (const h of histories) {
-    if (Number(h.cpm ?? 0) > Number(best.cpm ?? 0)) best = h;
+    if (Number(h.cpm ?? 0) > Number(best.cpm ?? 0)) {
+      best = h;
+    }
   }
 
-  const li = document.createElement("li");
-  li.textContent =
-    `ランク：${best.rank ?? "-"}` +
-    `｜スコア：${Number(best.cpm ?? 0)}` +
-    `｜長さ：${lengthLabel(best.lengthGroup)}` +
-    `｜テーマ：${best.theme ?? "-"}`;
-  bestByDifficultyUL.appendChild(li);
+  document.getElementById("bestRank").textContent = best.rank ?? "-";
+  document.getElementById("bestScore").textContent = best.cpm ?? "-";
+  document.getElementById("bestLength").textContent = lengthLabel(best.lengthGroup);
+  document.getElementById("bestTheme").textContent = best.theme ?? "-";
 }
+
 
 function renderRecent(histories) {
   myRecentUL.innerHTML = "";
@@ -988,3 +987,4 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
