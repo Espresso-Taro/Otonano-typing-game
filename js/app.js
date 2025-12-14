@@ -307,6 +307,7 @@ function updateThemeOptionsByCategory() {
     opt.textContent = v;
     themeEl.appendChild(opt);
   }
+  themeEl.value = "all";
 }
 
 
@@ -1218,6 +1219,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
