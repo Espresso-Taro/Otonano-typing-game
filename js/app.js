@@ -1236,6 +1236,10 @@ startBtn.addEventListener("click", async () => {
 
 if (dailyThemeEl) {
   dailyThemeEl.addEventListener("change", () => {
+    // ★ 今日の課題を ON にしたら skip / 除外状態をリセット
+    if (dailyThemeEl.checked) {
+      resetSkipState();   // ← ここが重要
+    }
     applyThemeOptionsByCategory();
     setNewText();
     updateLabels();
@@ -1402,6 +1406,7 @@ onAuthStateChanged(auth, async (user) => {
     await refreshMyGroups();
   }
 });
+
 
 
 
