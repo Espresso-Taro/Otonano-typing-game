@@ -7,6 +7,15 @@ import {
   limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+function lengthLabel(v) {
+  if (v === "xs") return "極短";
+  if (v === "short") return "短";
+  if (v === "medium") return "中";
+  if (v === "long") return "長";
+  if (v === "xl") return "極長";
+  return "-";
+}
+
 export class RankingService {
   constructor({ db }) {
     this.db = db;
@@ -96,8 +105,11 @@ export class RankingService {
 
     rows.forEach((r, i) => {
       const li = document.createElement("li");
-      li.textContent =
-        `${i + 1}. ${r.userName ?? "no-name"}｜${r.rank ?? "-"}｜Score ${r.cpm}`;
+      const rank = r.rank ?? "-";
+      const lg = lengthLabel(r.lengthGroup);
+      const theme = r.theme ?? "-";
+      const cpm = Number(r.cpm ?? 0);
+      li.textContent = `${i + 1}. ${r.userName ?? "no-name"}｜${rank}｜${lg}｜${theme}｜Score ${cpm}`;
       ul.appendChild(li);
     });
   }
