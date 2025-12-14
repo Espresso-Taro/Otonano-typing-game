@@ -53,7 +53,7 @@ const categoryEl = document.getElementById("category");
 const themeEl = document.getElementById("theme");
 
 // 元の app.js は dailyThemeEl を参照しているため残す（HTML 側に無い場合も落ちないよう後でガード）
-const dailyThemeEl = document.getElementById("dailyTheme");
+const dailyThemeEl = document.getElementById("dailyTask");
 // 元の index.html では dailyTask だが、ここは元コードを維持する
 const dailyInfoEl = document.getElementById("dailyInfo");
 
@@ -1354,5 +1354,6 @@ onAuthStateChanged(auth, async (user) => {
     await refreshMyGroups();
   }
 });
+
 
 
