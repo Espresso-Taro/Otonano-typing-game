@@ -516,7 +516,7 @@ function updateLabels() {
 
   // ★今日テーマランキングの見出しに、括弧内でテーマ名を表示
   if (dailyRankingTitle) {
-    dailyRankingTitle.textContent = `今日のテーマランキング（固定表示：${dailyThemeTxt}）`;
+    dailyRankingTitle.textContent = `今日のテーマランキング（${dailyThemeTxt}）`;
   }
 
   // 🔴 赤枠は完全削除（表示しない）
@@ -531,7 +531,7 @@ function updateLabels() {
   // ★入力分析タイトルに、括弧内で選択ユーザー名を表示
   const userName = userMgr.getCurrentUserName() || "ゲスト";
   if (analyticsTitle) {
-    analyticsTitle.textContent = `入力分析（選択ユーザー：${userName}）`;
+    analyticsTitle.textContent = `入力分析（${userName}）`;
   }
 
   // 🔴 赤枠は完全削除（表示しない）
@@ -987,4 +987,5 @@ onAuthStateChanged(auth, async (user) => {
   await init();
   await loadMyAnalytics(user.uid, userMgr.getCurrentUserName());
 });
+
 
