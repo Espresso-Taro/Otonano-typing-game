@@ -24,12 +24,14 @@ import { GroupService } from "./groupService.js";
    Firebase init
 ========================= */
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAqDSPE_HkPbi-J-SqPL4Ys-wR4RaA8wKA",
+  authDomain: "otonano-typing-game.firebaseapp.com",
+  projectId: "otonano-typing-game",
+  storageBucket: "otonano-typing-game.firebasestorage.app",
+  messagingSenderId: "475283850178",
+  appId: "1:475283850178:web:193d28f17be20a232f4c5b",
+  measurementId: "G-JE1X0NCNHB"
+  
 };
 
 const app = initializeApp(firebaseConfig);
@@ -1058,3 +1060,4 @@ onAuthStateChanged(auth, async (user) => {
     await refreshMyGroups();
   }
 });
+
