@@ -292,6 +292,36 @@ function initFilterOptions() {
   }
 }
 
+/* =========================================================
+   Category → Theme 連動
+========================================================= */
+function updateThemeOptionsByCategory() {
+  if (!categoryEl || !themeEl) return;
+  if (!State.allItems || State.allItems.length === 0) return;
+
+  const selectedCategory = categoryEl.value;
+
+  // 対象データ抽出
+  const filtered = selectedCategory === "all"
+    ? State.allItems
+    : State.allItems.filter(x => x.category === selectedCategory);
+
+  // theme 抽出
+  const themeSet = new Set(
+    filtered.map(x => x.theme).filter(Boolean)
+  );
+
+  // 再描画
+  themeEl.innerHTML = `<option value="all">すべて</option>`;
+  for (const v of Array.from(themeSet).sort()) {
+    const opt = document.createElement("option");
+    opt.value = v;
+    opt.textContent = v;
+    themeEl.appendChild(opt);
+  }
+}
+
+
 
 
 function getPracticeDifficulty() {
@@ -1200,5 +1230,6 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
