@@ -1,4 +1,4 @@
-// userManager.js
+// js/userManager.js
 import {
   collection,
   doc,
@@ -7,19 +7,22 @@ import {
   setDoc,
   deleteDoc,
   query,
-  where,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 export class UserManager {
-  constructor(db) {
+  constructor({ selectEl, addBtn, renameBtn, deleteBtn, db }) {
+    if (!db) {
+      throw new Error("UserManager: Firestore db is required");
+    }
+
     this.db = db;
 
-    // ===== DOM（存在しない環境でも動くようにする）=====
-    this.userSelect = document.getElementById("userSelect");
-    this.addBtn = document.getElementById("addUserBtn");
-    this.renameBtn = document.getElementById("renameUserBtn");
-    this.deleteBtn = document.getElementById("deleteUserBtn");
+    // ===== DOM（外から渡される／無い場合もある）=====
+    this.userSelect = selectEl || null;
+    this.addBtn = addBtn || null;
+    this.renameBtn = renameBtn || null;
+    this.deleteBtn = deleteBtn || null;
 
     // ===== state =====
     this.users = [];
@@ -37,18 +40,11 @@ export class UserManager {
     try {
       this.users = await this.listUsers();
 
-      // UI がある場合のみ描画
-      if (this.userSelect) {
-        this.render();
+      if (this.users.length > 0) {
+        this.currentUserName = this.users[0];
       }
 
-      // 初期ユーザーをセット
-      if (!this.currentUserName && this.users.length > 0) {
-        this.currentUserName = this.users[0];
-        if (this.userSelect) {
-          this.userSelect.value = this.currentUserName;
-        }
-      }
+      this.render();
     } catch (e) {
       console.error("UserManager init failed", e);
     }
@@ -62,11 +58,12 @@ export class UserManager {
       this.addBtn.addEventListener("click", async () => {
         const name = prompt("ユーザー名を入力してください（全体で一意）");
         if (!name) return;
+
         try {
           await this.addUser(name);
         } catch (e) {
           console.error("addUser failed", e);
-          alert("ユーザー作成に失敗しました");
+          alert(e.message || "ユーザー作成に失敗しました");
         }
       });
     }
@@ -74,13 +71,15 @@ export class UserManager {
     if (this.renameBtn) {
       this.renameBtn.addEventListener("click", async () => {
         if (!this.currentUserName) return;
+
         const newName = prompt("新しいユーザー名", this.currentUserName);
         if (!newName || newName === this.currentUserName) return;
+
         try {
           await this.renameUser(this.currentUserName, newName);
         } catch (e) {
           console.error("renameUser failed", e);
-          alert("改名に失敗しました");
+          alert(e.message || "改名に失敗しました");
         }
       });
     }
@@ -89,6 +88,7 @@ export class UserManager {
       this.deleteBtn.addEventListener("click", async () => {
         if (!this.currentUserName) return;
         if (!confirm(`ユーザー「${this.currentUserName}」を削除しますか？`)) return;
+
         try {
           await this.deleteUser(this.currentUserName);
         } catch (e) {
@@ -139,9 +139,11 @@ export class UserManager {
     }
   }
 
+  /* =========================
+     Firestore 操作
+  ========================= */
   async listUsers() {
-    const q = query(collection(this.db, "userNames"));
-    const snap = await getDocs(q);
+    const snap = await getDocs(collection(this.db, "userNames"));
     return snap.docs.map(d => d.id);
   }
 
@@ -149,20 +151,14 @@ export class UserManager {
     const ref = doc(this.db, "userNames", name);
     const snap = await getDoc(ref);
     if (snap.exists()) {
-      throw new Error("User name already exists");
+      throw new Error("このユーザー名は既に使われています");
     }
 
-    await setDoc(ref, {
-      createdAt: serverTimestamp()
-    });
+    await setDoc(ref, { createdAt: serverTimestamp() });
 
     this.users = await this.listUsers();
     this.currentUserName = name;
-
-    if (this.userSelect) {
-      this.render();
-      this.userSelect.value = name;
-    }
+    this.render();
   }
 
   async renameUser(oldName, newName) {
@@ -171,52 +167,37 @@ export class UserManager {
 
     const oldSnap = await getDoc(oldRef);
     if (!oldSnap.exists()) {
-      throw new Error("Old user does not exist");
+      throw new Error("元のユーザーが存在しません");
     }
 
     const newSnap = await getDoc(newRef);
     if (newSnap.exists()) {
-      throw new Error("New user name already exists");
+      throw new Error("新しいユーザー名は既に使われています");
     }
 
-    await setDoc(newRef, {
-      createdAt: serverTimestamp()
-    });
-
+    await setDoc(newRef, { createdAt: serverTimestamp() });
     await deleteDoc(oldRef);
 
     this.users = await this.listUsers();
     this.currentUserName = newName;
-
-    if (this.userSelect) {
-      this.render();
-      this.userSelect.value = newName;
-    }
+    this.render();
   }
 
   async deleteUser(name) {
-    const ref = doc(this.db, "userNames", name);
-    await deleteDoc(ref);
+    await deleteDoc(doc(this.db, "userNames", name));
 
     this.users = await this.listUsers();
     this.currentUserName = this.users[0] || "";
-
-    if (this.userSelect) {
-      this.render();
-      if (this.currentUserName) {
-        this.userSelect.value = this.currentUserName;
-      }
-    }
+    this.render();
   }
 
   /* =========================
-     履歴（分析用）
+     履歴（分析用：将来拡張）
   ========================= */
   async getHistories(uid) {
-    const q = query(
+    const snap = await getDocs(
       collection(this.db, "users", uid, "profiles", "default", "histories")
     );
-    const snap = await getDocs(q);
     return snap.docs.map(d => d.data());
   }
 }
