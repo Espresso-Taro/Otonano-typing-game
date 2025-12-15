@@ -181,7 +181,6 @@ export class GroupService {
   
       const req = reqSnap.data();
   
-      // ★ userName ベースの固定ID
       const memberRef = doc(
         this.db,
         "groupMembers",
@@ -194,16 +193,16 @@ export class GroupService {
         userName: req.userName,
         role: "member",
   
-        // ★ これが必須
+        // ★ ここが最重要
         createdBy: ownerUserName,
   
         createdAt: serverTimestamp()
       });
   
-      // request 削除
       tx.delete(reqRef);
     });
   }
+
 
 
   /* =========================
@@ -258,5 +257,6 @@ export class GroupService {
     await deleteDoc(doc(this.db, "groups", groupId));
   }
 }
+
 
 
