@@ -166,6 +166,36 @@ const State = {
 
 const GROUP_STORAGE_KEY = "currentGroupId_v1";
 
+function currentUserNameSafe() {
+  return (userMgr.getCurrentUserName?.() ?? "").toString();
+}
+
+function groupStorageKeyOf(userName) {
+  return `currentGroupId_v1:${userName}`;
+}
+
+function getSavedGroupIdFor(userName) {
+  if (!userName) return "";
+  return localStorage.getItem(groupStorageKeyOf(userName)) || "";
+}
+
+function setSavedGroupIdFor(userName, groupId) {
+  if (!userName) return;
+  const key = groupStorageKeyOf(userName);
+  if (groupId) localStorage.setItem(key, groupId);
+  else localStorage.removeItem(key);
+}
+
+function bindUserSwitchHooks() {
+  // userName切替 → グループ即更新 + ランキング更新
+  on(userSelect, "change", async () => {
+    // userMgr側の状態反映が先に走る前提で、選択後に再描画
+    await refreshMyGroups();
+    await reloadAllRankings();
+  });
+}
+
+
 /* =========================================================
    Labels / mapping
 ========================================================= */
@@ -919,7 +949,8 @@ async function refreshMyGroups() {
     currentGroupSelect.appendChild(opt);
   }
 
-  const saved = localStorage.getItem(GROUP_STORAGE_KEY) || "";
+  const userName = currentUserNameSafe();
+  const saved = getSavedGroupIdFor(userName);
   const optionValues = Array.from(currentGroupSelect.options).map(o => o.value);
   
   let nextGroupId = null;
@@ -931,13 +962,11 @@ async function refreshMyGroups() {
   
   currentGroupSelect.value = nextGroupId || "";
   State.currentGroupId = nextGroupId;
-  if (nextGroupId) {
-    localStorage.setItem(GROUP_STORAGE_KEY, nextGroupId);
-  } else {
-    localStorage.removeItem(GROUP_STORAGE_KEY);
-  }
+  
+  setSavedGroupIdFor(userName, nextGroupId);
   
   await onGroupChanged();
+
 
 
 
@@ -1024,7 +1053,7 @@ async function onGroupChanged() {
   State.currentGroupId = sel?.value ?? "";
   State.currentGroupRole = sel?.dataset?.role ?? null;
 
-  localStorage.setItem(GROUP_STORAGE_KEY, State.currentGroupId);
+  setSavedGroupIdFor(currentUserNameSafe(), State.currentGroupId);
 
   if (leaveGroupBtn) leaveGroupBtn.disabled = !State.currentGroupId;
   if (deleteGroupBtn) deleteGroupBtn.disabled = !(State.currentGroupId && State.currentGroupRole === "owner");
@@ -1384,6 +1413,8 @@ engine.attach();
   bindPracticeFilters();
   bindRankDiffTabs();
   bindGroupUI();
+  bindUserSwitchHooks();
+
 
   // 認証後にグループ一覧
   await refreshMyGroups();
@@ -1413,4 +1444,5 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
