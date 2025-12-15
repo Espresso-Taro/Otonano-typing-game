@@ -166,33 +166,45 @@ export class GroupService {
      - member 追加
      - request 削除
   ========================= */
-  async approveMember(requestId) {
-    if (!requestId) throw new Error("invalid requestId");
-
+  async approveMember(requestId, ownerUserName) {
+    if (!requestId || !ownerUserName) {
+      throw new Error("invalid arguments");
+    }
+  
     const reqRef = doc(this.db, "groupJoinRequests", requestId);
-
+  
     await runTransaction(this.db, async (tx) => {
       const reqSnap = await tx.get(reqRef);
       if (!reqSnap.exists()) {
         throw new Error("request not found");
       }
-
+  
       const req = reqSnap.data();
-
-      // member 追加
-      const memberRef = doc(this.db, "groupMembers", `${uid}_${groupId}`);
+  
+      // ★ userName ベースの固定ID
+      const memberRef = doc(
+        this.db,
+        "groupMembers",
+        `${req.userName}_${req.groupId}`
+      );
+  
       tx.set(memberRef, {
         groupId: req.groupId,
         uid: req.uid,
-        userName: req.userName || "Member",
+        userName: req.userName,
         role: "member",
+  
+        // ★ これが必須
+        createdBy: ownerUserName,
+  
         createdAt: serverTimestamp()
       });
-
+  
       // request 削除
       tx.delete(reqRef);
     });
   }
+
 
   /* =========================
      却下
@@ -246,4 +258,5 @@ export class GroupService {
     await deleteDoc(doc(this.db, "groups", groupId));
   }
 }
+
 
