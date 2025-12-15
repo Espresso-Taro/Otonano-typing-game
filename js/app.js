@@ -193,6 +193,56 @@ function lengthLabel(v) {
   return "-";
 }
 
+/* =========================================================
+   文章解析ユーティリティ（難易度・文章長 自動判定）
+========================================================= */
+
+// 記号スコア（IME入力の負荷を反映）
+function punctScore(text) {
+  const strong = (text.match(/[（）「」『』［］【】＜＞”’]/g) || []).length;
+  const middle = (text.match(/[￥＄：；]/g) || []).length;
+  const weak = (text.match(/[ー・＃％＆＋－＝／]/g) || []).length;
+  const basic = (text.match(/[、。,.!！?？]/g) || []).length;
+
+  return strong * 3 + middle * 2 + weak * 1 + basic * 1;
+}
+
+function digitCount(text) {
+  return (text.match(/[0-9]/g) || []).length;
+}
+
+function kanjiRatio(text) {
+  const total = text.length || 1;
+  const kanji = (text.match(/[一-龥]/g) || []).length;
+  return kanji / total;
+}
+
+/* =========================
+   難易度：3段階
+========================= */
+function difficultyByText(text) {
+  const score =
+    kanjiRatio(text) * 100 +
+    punctScore(text) * 6 +
+    digitCount(text) * 10;
+
+  if (score < 35) return "easy";
+  if (score < 65) return "normal";
+  return "hard";
+}
+
+/* =========================
+   文章長：5段階
+========================= */
+function lengthGroupOf(len) {
+  if (len <= 20) return "xs";
+  if (len <= 40) return "short";
+  if (len <= 80) return "medium";
+  if (len <= 140) return "long";
+  return "xl";
+}
+
+
 function fixedLengthByDifficulty(diff) {
   // 要件：易=極短 / 普=中 / 難=極長
   if (diff === "easy") return "xs";
@@ -231,14 +281,29 @@ async function loadTrivia() {
   const json = await res.json();
   if (!Array.isArray(json)) throw new Error("trivia.json must be an array");
 
-  State.allItems = json.map((x) => ({
-    ...x,
-    text: (x?.text ?? "").toString(),
-    difficulty: (x?.difficulty ?? "normal").toString(),
-    lengthGroup: (x?.lengthGroup ?? "medium").toString(),
-    category: (x?.category ?? "all").toString(),
-    theme: (x?.theme ?? "all").toString()
-  }));
+  State.allItems = json.map((x) => {
+    const text = (x?.text ?? "").toString();
+    const len = text.length;
+  
+    return {
+      ...x,
+      text,
+  
+      // ★ 難易度：trivia.json に無ければ自動判定
+      difficulty: x?.difficulty
+        ? x.difficulty.toString()
+        : difficultyByText(text),
+  
+      // ★ 文章長：trivia.json に無ければ文字数から自動判定
+      lengthGroup: x?.lengthGroup
+        ? x.lengthGroup.toString()
+        : lengthGroupOf(len),
+  
+      category: (x?.category ?? "all").toString(),
+      theme: (x?.theme ?? "all").toString()
+    };
+  });
+
 }
 
 /* =========================================================
@@ -1266,6 +1331,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
