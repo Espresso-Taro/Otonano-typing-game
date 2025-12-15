@@ -1462,10 +1462,6 @@ engine.attach();
   bindGroupUI();
   bindUserSwitchHooks();
 
-
-  // 認証後にグループ一覧
-  await refreshMyGroups();
-
   // 初回ランキング
   await reloadAllRankings();
   await loadMyAnalytics();
@@ -1493,6 +1489,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
