@@ -1,77 +1,134 @@
 // js/typingEngine.js
+// IME（日本語変換）中は判定しない / 確定文字だけで青赤表示 / CPM=文章長÷時間
 export class TypingEngine {
-  constructor({ textEl, inputEl, resultEl, onFinish }) {
-    this.textEl = textEl;
-    this.inputEl = inputEl;
-    this.resultEl = resultEl;
-    this.onFinish = onFinish;
+  constructor(opts = {}) {
+    this.textEl = opts.textEl || null;
+    this.inputEl = opts.inputEl || null;
+    this.resultEl = opts.resultEl || null;
+    this.onFinish = typeof opts.onFinish === "function" ? opts.onFinish : null;
 
     this.target = "";
     this.targetMeta = null;
 
     this.started = false;
     this.ended = false;
-
     this.startTimeMs = 0;
 
     this.isComposing = false;
     this.lastCommittedValue = "";
+    this.keystrokes = 0; // 参考値
 
-    this.keystrokes = 0; // 参考（表示や保存に使わない方針でも残しておく）
+    this.guideChar = "";
+
+    // textarea の元paddingを復元するために保持
+    this._basePaddingTop = null;
+    this._basePaddingBottom = null;
+  }
+
+  _ensureBasePadding() {
+    if (!this.inputEl) return;
+    if (this._basePaddingTop != null && this._basePaddingBottom != null) return;
+
+    const cs = getComputedStyle(this.inputEl);
+    this._basePaddingTop = cs.paddingTop;
+    this._basePaddingBottom = cs.paddingBottom;
+  }
+
+  _restoreBasePadding() {
+    if (!this.inputEl) return;
+    this._ensureBasePadding();
+    if (this._basePaddingTop != null) this.inputEl.style.paddingTop = this._basePaddingTop;
+    if (this._basePaddingBottom != null) this.inputEl.style.paddingBottom = this._basePaddingBottom;
   }
 
   setTarget(text, meta = null) {
-    this.target = text || "";
+    this.target = (text ?? "").toString();
     this.targetMeta = meta;
 
     this.started = false;
     this.ended = false;
     this.startTimeMs = 0;
+
     this.isComposing = false;
     this.lastCommittedValue = "";
-
     this.keystrokes = 0;
 
-    this.inputEl.value = "";
-    this.inputEl.disabled = true;
-    this.resultEl.textContent = "";
+    this.guideChar = this.target.charAt(0) || "";
+
+    if (this.inputEl) {
+      this._ensureBasePadding();
+      this.inputEl.classList.remove("countdown");
+      this.inputEl.classList.remove("input-guide");
+      this._restoreBasePadding();
+
+      this.inputEl.value = "";
+      this.inputEl.disabled = true;
+    }
+
+    if (this.resultEl) this.resultEl.textContent = "";
 
     this._renderByCommitted("");
-  }
-
-  // カウントダウン表示は「入力欄内」に出す
-  showCountdownInTextarea(n) {
-    this.inputEl.disabled = true;
-    this.inputEl.classList.add("countdown");
-
-    this.inputEl.value = String(n);
-
-    // ▼上下中央寄せ：textareaの高さからpadding-topを計算（%は使わない）
-    const el = this.inputEl;
-    const cs = getComputedStyle(el);
-    const fontSize = parseFloat(cs.fontSize) || 0; // px
-    const h = el.clientHeight;
-    const padTop = Math.max(0, Math.floor((h - fontSize) / 2));
-
-    el.style.paddingTop = `${padTop}px`;
-    el.style.paddingBottom = "0px";
+    this._showGuideCharInTextarea();
   }
 
   enableReadyState() {
-    this.inputEl.disabled = false;
-    this.inputEl.value = "";
-    this.inputEl.focus();
+    // app.js側で start まで disabled 管理する前提（ここでは ready 表示だけ整える）
+    if (!this.inputEl) return;
+    this.started = false;
+    this.ended = false;
+    this.startTimeMs = 0;
+    this.isComposing = false;
+    this.lastCommittedValue = "";
+    this.keystrokes = 0;
+
+    this.inputEl.disabled = true;
+    this._showGuideCharInTextarea();
+  }
+
+  async showCountdownInTextarea(sec = 3) {
+    if (!this.inputEl) return;
+
+    const el = this.inputEl;
+    this._ensureBasePadding();
+
+    el.disabled = true;
+    el.classList.remove("input-guide");
+    el.classList.add("countdown");
+
+    for (let i = Number(sec) || 3; i > 0; i--) {
+      el.value = String(i);
+      this._applyVerticalCenterPadding();
+      await this._sleep(1000);
+    }
+
+    el.value = "";
+    el.classList.remove("countdown");
+    this._restoreBasePadding();
   }
 
   startNow() {
+    if (!this.inputEl) return;
+
     this.started = true;
     this.ended = false;
     this.startTimeMs = Date.now();
     this.keystrokes = 0;
-    this.lastCommittedValue = this.inputEl.value;
+
+    this.isComposing = false;
+    this.lastCommittedValue = "";
+
+    this.inputEl.classList.remove("countdown");
+    this.inputEl.classList.remove("input-guide");
+    this._restoreBasePadding();
+
+    this.inputEl.value = "";
+    this.inputEl.disabled = false;
+    this.inputEl.focus();
   }
 
   attach() {
+    if (!this.inputEl) return;
+
     // keydown: 打鍵カウント（参考）
     this.inputEl.addEventListener("keydown", (e) => {
       if (!this.started || this.ended) return;
@@ -113,59 +170,56 @@ export class TypingEngine {
   }
 
   _getCommittedValueSafe() {
-    return this.inputEl.value ?? "";
+    return this.inputEl?.value ?? "";
   }
 
   _tryFinishIfMatched() {
     if (this.ended) return;
     const committed = this.lastCommittedValue;
 
-    // 確定文字で完全一致したら即終了
     if (committed === this.target) {
       this.ended = true;
 
       const endMs = Date.now();
-      const sec = Math.max(0.001, (endMs - this.startTimeMs) / 1000);
+      const timeSec = Math.max(0.001, (endMs - this.startTimeMs) / 1000);
 
       const metrics = this.computeMetrics({
         committed,
-        seconds: sec,
+        timeSec,
         keystrokes: this.keystrokes
       });
 
-      // 表示（app.js側でモーダルも出す）
-      this.resultEl.innerHTML = `完了！ スコア(CPM): ${metrics.cpm}　ランク: ${metrics.rank}`;
+      if (this.resultEl) {
+        this.resultEl.innerHTML = `完了！ スコア(CPM): ${metrics.cpm}　ランク: ${metrics.rank}`;
+      }
 
       this.onFinish?.({ metrics, meta: this.targetMeta });
 
-      this.inputEl.disabled = true;
+      if (this.inputEl) this.inputEl.disabled = true;
     }
   }
 
-  // ★新仕様：CPM（=スコア）は「文章長 ÷ 完了時間」
-  computeMetrics({ committed, seconds, keystrokes }) {
-    const minutes = seconds / 60;
-
-    // 出題文の文字数で評価する（漢字/かな混在でも公平）
+  // CPM（=スコア）は「文章長 ÷ 完了時間」
+  computeMetrics({ committed, timeSec, keystrokes }) {
+    const minutes = timeSec / 60;
     const targetLen = (this.target ?? "").length;
 
     const cpm = Math.round((targetLen / minutes));
-
-    // 参考値として残す（使わないなら保存しなくてOK）
-    const kpm = Math.round((keystrokes / minutes));
+    const kpm = Math.round(((Number(keystrokes) || 0) / minutes));
 
     const rank = this.calcRank(cpm);
 
     return {
       cpm,
       rank,
-      seconds: Math.round(seconds * 1000) / 1000,
+      timeSec: Math.round(timeSec * 1000) / 1000,
       length: targetLen,
-      kpm
+      kpm,
+      // 互換用
+      seconds: Math.round(timeSec * 1000) / 1000
     };
   }
 
-  // ★新方針：ランクは「速く一致できたか」中心（CPMだけ）
   calcRank(cpm) {
     if (cpm >= 520) return "SSS";
     if (cpm >= 440) return "SS";
@@ -176,8 +230,9 @@ export class TypingEngine {
     return "D";
   }
 
-  // 見本文：確定文字だけで青/赤を付ける（変換中は lastCommitted を使う）
   _renderByCommitted(committed) {
+    if (!this.textEl) return;
+
     const t = this.target ?? "";
     const v = committed ?? "";
 
@@ -208,5 +263,40 @@ export class TypingEngine {
     }
 
     this.textEl.innerHTML = html;
+  }
+
+  _showGuideCharInTextarea() {
+    if (!this.inputEl) return;
+    if (!this.guideChar) return;
+
+    const el = this.inputEl;
+    this._ensureBasePadding();
+
+    el.disabled = true;
+    el.classList.remove("countdown");
+    el.classList.add("input-guide");
+
+    el.value = this.guideChar;
+
+    this._applyVerticalCenterPadding();
+  }
+
+  _applyVerticalCenterPadding() {
+    if (!this.inputEl) return;
+
+    const el = this.inputEl;
+
+    // textareaの高さから padding-top を計算して縦中央寄せ（%は使わない）
+    const cs = getComputedStyle(el);
+    const fontSize = parseFloat(cs.fontSize) || 0;
+    const h = el.clientHeight;
+    const padTop = Math.max(0, Math.floor((h - fontSize) / 2));
+
+    el.style.paddingTop = `${padTop}px`;
+    el.style.paddingBottom = "0px";
+  }
+
+  _sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
