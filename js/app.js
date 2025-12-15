@@ -311,7 +311,9 @@ function updateThemeOptionsByCategory() {
   // 通常モードのみ theme をリセット
   if (!State.daily.enabled) {
     themeEl.value = "all";
+  }
 }
+
 
 
 function getPracticeDifficulty() {
@@ -1251,6 +1253,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
