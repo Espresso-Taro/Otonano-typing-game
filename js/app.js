@@ -922,7 +922,6 @@ async function refreshMyGroups() {
   const saved = localStorage.getItem(GROUP_STORAGE_KEY) || "";
   const optionValues = Array.from(currentGroupSelect.options).map(o => o.value);
   
-  // ① 選択すべき groupId を決定
   let nextGroupId = null;
   if (saved && optionValues.includes(saved)) {
     nextGroupId = saved;
@@ -930,7 +929,6 @@ async function refreshMyGroups() {
     nextGroupId = groups[0].groupId;
   }
   
-  // ② UI と State を先に確定
   currentGroupSelect.value = nextGroupId || "";
   State.currentGroupId = nextGroupId;
   if (nextGroupId) {
@@ -939,8 +937,8 @@ async function refreshMyGroups() {
     localStorage.removeItem(GROUP_STORAGE_KEY);
   }
   
-  // ③ 最後に change 処理
   await onGroupChanged();
+
 
 
 }
@@ -1415,3 +1413,4 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
