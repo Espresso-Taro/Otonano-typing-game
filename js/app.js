@@ -1321,7 +1321,7 @@ function bindGroupUI() {
 
   on(currentGroupSelect, "change", onGroupChanged);
   
-  on(LeaveGroupeBtn, "click", async () => {
+  on(leaveGroupeBtn, "click", async () => {
     if (!State.currentGroupId) return;
   
     if (!confirm("このグループから退出しますか？")) return;
@@ -1489,6 +1489,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
