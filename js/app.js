@@ -373,7 +373,7 @@ function initFilterOptions() {
   // カテゴリ
   if (categoryEl) {
     const set = new Set(State.allItems.map(x => x.category).filter(Boolean));
-    categoryEl.innerHTML = `<option value="all">すべて</option>`;
+    categoryEl.innerHTML = `<option value="all">カテゴリ：すべて</option>`;
     for (const v of Array.from(set).sort()) {
       const opt = document.createElement("option");
       opt.value = v;
@@ -403,7 +403,7 @@ function updateThemeOptionsByCategory() {
 
   const themeSet = new Set(filtered.map(x => x.theme).filter(Boolean));
 
-  themeEl.innerHTML = `<option value="all">すべて</option>`;
+  themeEl.innerHTML = `<option value="all">テーマ：すべて</option>`;
   for (const v of Array.from(themeSet).sort()) {
     const opt = document.createElement("option");
     opt.value = v;
@@ -1537,6 +1537,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
