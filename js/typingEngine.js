@@ -278,7 +278,7 @@ export class TypingEngine {
 
     el.value = this.guideChar;
 
-    this._applyVerticalCenterPadding();
+    this._restoreBasePadding();
   }
 
   _applyVerticalCenterPadding() {
@@ -300,3 +300,4 @@ export class TypingEngine {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+
