@@ -1415,25 +1415,3 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
