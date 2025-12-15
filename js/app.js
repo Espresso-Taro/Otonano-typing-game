@@ -1109,19 +1109,49 @@ function bindModal() {
 }
 
 function bindTypingButtons() {
-  on(startBtn, "click", async () => {
-    if (!inputEl) return;
-    inputEl.disabled = false;
-    inputEl.value = "";
-    inputEl.focus();
+  const canStartNow = () => {
+    if (!startBtn || startBtn.disabled) return false;
+    if (startBtn.style.display === "none") return false;
 
-    // カウントダウン→開始
+    // モーダル表示中は開始しない
+    if (modalBackdrop && modalBackdrop.style.display === "flex") return false;
+
+    // フォーム操作中（select等）に Space が誤爆しないようガード
+    const ae = document.activeElement;
+    const tag = ae?.tagName || "";
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
+      // ただし「タイピング欄（disabled）」にフォーカスがある場合は許可
+      if (ae !== inputEl) return false;
+    }
+
+    return true;
+  };
+
+  const startSequence = async () => {
+    if (!inputEl || !canStartNow()) return;
+
+    // 開始したらスタートを消す（要件）
+    startBtn.style.display = "none";
+
+    // カウントダウン → 開始
     await engine.showCountdownInTextarea(3);
     engine.startNow();
+  };
+
+  on(startBtn, "click", startSequence);
+
+  // Space/Enter で開始（app.js側）
+  document.addEventListener("keydown", (e) => {
+    if (!canStartNow()) return;
+
+    if (e.code === "Space" || e.code === "Enter") {
+      e.preventDefault();
+      startSequence();
+    }
   });
 
   on(skipBtn, "click", () => {
-    // 要件：「別の文章にする」押下で今日の課題チェックを外して別文
+    // 既存処理そのまま
     if (dailyTaskEl && dailyTaskEl.checked) {
       dailyTaskEl.checked = false;
       disableDailyTask();
@@ -1134,6 +1164,7 @@ function bindTypingButtons() {
     updateMetaInfo();
   });
 }
+
 
 function bindPracticeFilters() {
   on(difficultyEl, "change", () => {
@@ -1490,6 +1521,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
