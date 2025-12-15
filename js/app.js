@@ -962,7 +962,11 @@ async function loadPendingRequests() {
 
       on(ok, "click", async () => {
         try {
-          await groupSvc.approveMember(r.id);
+          await groupSvc.approveMember(
+            r.id,
+            userMgr.getCurrentUserName()   // ← owner の userName
+          );
+
           await loadPendingRequests();
           await refreshMyGroups();
         } catch (e) {
@@ -1393,6 +1397,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
