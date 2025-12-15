@@ -1,95 +1,138 @@
+// js/groupService.js
 import {
   collection,
   doc,
+  getDoc,
+  getDocs,
   setDoc,
   addDoc,
-  getDocs,
-  getDoc,
+  deleteDoc,
   query,
   where,
-  deleteDoc,
+  limit,
   serverTimestamp,
-  runTransaction
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+function memberIdOf(uid, userName, groupId) {
+  return `${uid}::${userName}::${groupId}`;
+}
+
+function joinReqIdOf(uid, userName, groupId) {
+  return `${uid}::${userName}::${groupId}`;
+}
 
 export class GroupService {
   constructor(db) {
+    if (!db) throw new Error("GroupService: db required");
     this.db = db;
   }
 
   /* =========================
-     グループ作成
-     - owner を固定IDで登録
+     グループ作成（owner）
   ========================= */
-  async createGroup(name, ownerUid, ownerUserName) {
-    if (!name || !ownerUid || !ownerUserName) {
-      throw new Error("invalid arguments");
-    }
+  async createGroup({ groupName, ownerUid, ownerUserName }) {
+    const name = (groupName || "").toString().trim();
+    if (!name) throw new Error("グループ名が空です");
+    if (!ownerUid || !ownerUserName) throw new Error("owner情報が不正です");
 
-    // group 本体
-    const groupRef = await addDoc(collection(this.db, "groups"), {
+    const groupRef = doc(collection(this.db, "groups"));
+    const groupId = groupRef.id;
+
+    // groups
+    await setDoc(groupRef, {
       name,
       ownerUid,
-      ownerName: ownerUserName,
+      ownerUserName,
       createdAt: serverTimestamp()
     });
 
-    // owner を groupMembers に固定IDで追加
-    await setDoc(
-      doc(this.db, "groupMembers", `${ownerUserName}_${groupRef.id}`),
-      {
-        groupId: groupRef.id,
-        uid: ownerUid,
-        userName: ownerUserName,
-        role: "owner",
-        createdBy: ownerUserName,
-        createdAt: serverTimestamp()
-      }
-    );
+    // groupMembers(owner)
+    const memRef = doc(this.db, "groupMembers", memberIdOf(ownerUid, ownerUserName, groupId));
+    await setDoc(memRef, {
+      groupId,
+      uid: ownerUid,
+      userName: ownerUserName,
+      role: "owner",
+      createdAt: serverTimestamp()
+    });
 
-    return groupRef.id;
+    return { groupId, name };
   }
 
   /* =========================
-     グループ検索
+     自分の所属グループ一覧
   ========================= */
-  async searchGroups(keyword) {
-    if (!keyword) return [];
+  async getMyGroups(uid, userName) {
+    if (!uid || !userName) return [];
+
+    const q = query(
+      collection(this.db, "groupMembers"),
+      where("uid", "==", uid),
+      where("userName", "==", userName)
+    );
+    const snap = await getDocs(q);
+
+    const rows = [];
+    for (const d of snap.docs) {
+      const m = d.data();
+      const groupId = m.groupId;
+
+      let gName = "(no name)";
+      let ownerUid = null;
+      let ownerUserName = null;
+
+      try {
+        const gSnap = await getDoc(doc(this.db, "groups", groupId));
+        if (gSnap.exists()) {
+          const g = gSnap.data();
+          gName = g.name ?? gName;
+          ownerUid = g.ownerUid ?? null;
+          ownerUserName = g.ownerUserName ?? null;
+        }
+      } catch {
+        // ignore
+      }
+
+      rows.push({
+        groupId,
+        name: gName,
+        role: m.role || "member",
+        ownerUid,
+        ownerUserName
+      });
+    }
+
+    rows.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    return rows;
+  }
+
+  /* =========================
+     グループ検索（名前完全一致の簡易版）
+  ========================= */
+  async searchGroupsByName(nameRaw) {
+    const name = (nameRaw || "").toString().trim();
+    if (!name) return [];
 
     const q = query(
       collection(this.db, "groups"),
-      where("name", ">=", keyword),
-      where("name", "<=", keyword + "\uf8ff")
+      where("name", "==", name),
+      limit(10)
     );
-
     const snap = await getDocs(q);
-    return snap.docs.map(d => ({
-      id: d.id,
-      ...d.data()
-    }));
+
+    return snap.docs.map(d => ({ groupId: d.id, ...(d.data() || {}) }));
   }
 
   /* =========================
-     参加申請（userName 単位）
+     参加申請
+     - 同一(uid,userName,groupId)で重複しないよう、ID固定で setDoc
   ========================= */
-  async requestJoin(groupId, uid, userName) {
-    if (!groupId || !uid || !userName) {
-      throw new Error("invalid arguments");
-    }
+  async requestJoin({ groupId, uid, userName }) {
+    if (!groupId || !uid || !userName) throw new Error("requestJoin: params invalid");
 
-    // userName 単位で二重申請防止
-    const q = query(
-      collection(this.db, "groupJoinRequests"),
-      where("groupId", "==", groupId),
-      where("userName", "==", userName)
-    );
-
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-      throw new Error("already requested");
-    }
-
-    await addDoc(collection(this.db, "groupJoinRequests"), {
+    const reqRef = doc(this.db, "groupJoinRequests", joinReqIdOf(uid, userName, groupId));
+    await setDoc(reqRef, {
       groupId,
       uid,
       userName,
@@ -98,37 +141,7 @@ export class GroupService {
   }
 
   /* =========================
-     自分の所属グループ一覧
-     ※ userName 基準
-  ========================= */
-  async getMyGroups(userName) {
-    if (!userName) return [];
-
-    const q = query(
-      collection(this.db, "groupMembers"),
-      where("userName", "==", userName)
-    );
-
-    const snap = await getDocs(q);
-    const groups = [];
-
-    for (const d of snap.docs) {
-      const m = d.data();
-      const gSnap = await getDoc(doc(this.db, "groups", m.groupId));
-      if (!gSnap.exists()) continue;
-
-      groups.push({
-        groupId: m.groupId,
-        role: m.role,
-        ...gSnap.data()
-      });
-    }
-
-    return groups;
-  }
-
-  /* =========================
-     承認待ち一覧（owner）
+     承認待ち一覧（owner用）
   ========================= */
   async getPendingRequests(groupId) {
     if (!groupId) return [];
@@ -137,103 +150,99 @@ export class GroupService {
       collection(this.db, "groupJoinRequests"),
       where("groupId", "==", groupId)
     );
-
     const snap = await getDocs(q);
-    return snap.docs.map(d => ({
-      id: d.id,
-      ...d.data()
-    }));
+
+    return snap.docs.map(d => ({ id: d.id, ...(d.data() || {}) }));
   }
 
   /* =========================
-     承認（transaction）
-     - member 追加（固定ID）
-     - request 削除
+     承認（ownerが実行）
+     - groupMembers 作成
+     - joinRequests 削除
   ========================= */
-  async approveMember(requestId, ownerUserName) {
-    if (!requestId || !ownerUserName) {
-      throw new Error("invalid arguments");
-    }
+  async approveMember({ requestId, ownerUid, ownerUserName }) {
+    if (!requestId) throw new Error("approveMember: requestId required");
 
     const reqRef = doc(this.db, "groupJoinRequests", requestId);
+    const reqSnap = await getDoc(reqRef);
+    if (!reqSnap.exists()) throw new Error("申請が存在しません");
 
-    await runTransaction(this.db, async (tx) => {
-      const reqSnap = await tx.get(reqRef);
-      if (!reqSnap.exists()) {
-        throw new Error("request not found");
-      }
+    const r = reqSnap.data();
+    const groupId = r.groupId;
+    const uid = r.uid;
+    const userName = r.userName;
 
-      const req = reqSnap.data();
+    if (!groupId || !uid || !userName) throw new Error("申請データが不正です");
 
-      if (req.userName === ownerUserName) {
-        throw new Error("owner cannot approve self");
-      }
+    const memRef = doc(this.db, "groupMembers", memberIdOf(uid, userName, groupId));
 
-      const memberRef = doc(
-        this.db,
-        "groupMembers",
-        `${req.userName}_${req.groupId}`
-      );
-
-      tx.set(memberRef, {
-        groupId: req.groupId,
-        uid: req.uid,
-        userName: req.userName,
-        role: "member",
-        createdBy: ownerUserName,
-        createdAt: serverTimestamp()
-      });
-
-      tx.delete(reqRef);
+    const batch = writeBatch(this.db);
+    batch.set(memRef, {
+      groupId,
+      uid,
+      userName,
+      role: "member",
+      approvedByUid: ownerUid || null,
+      approvedByUserName: ownerUserName || null,
+      createdAt: serverTimestamp()
     });
+    batch.delete(reqRef);
+
+    await batch.commit();
   }
 
   /* =========================
-     却下
+     却下（ownerが実行）
   ========================= */
-  async rejectMember(requestId) {
-    if (!requestId) throw new Error("invalid requestId");
+  async rejectMember({ requestId }) {
+    if (!requestId) throw new Error("rejectMember: requestId required");
     await deleteDoc(doc(this.db, "groupJoinRequests", requestId));
   }
 
   /* =========================
-     グループ退出（userName 単位）
+     退出（自分のmember docを削除）
   ========================= */
-  async leaveGroup(groupId, userName) {
-    if (!groupId || !userName) return;
-
-    const q = query(
-      collection(this.db, "groupMembers"),
-      where("groupId", "==", groupId),
-      where("userName", "==", userName)
-    );
-
-    const snap = await getDocs(q);
-    for (const d of snap.docs) {
-      await deleteDoc(d.ref);
-    }
+  async leaveGroup({ groupId, uid, userName }) {
+    if (!groupId || !uid || !userName) throw new Error("leaveGroup: params invalid");
+    const memRef = doc(this.db, "groupMembers", memberIdOf(uid, userName, groupId));
+    await deleteDoc(memRef);
   }
 
   /* =========================
-     グループ削除（owner）
+     グループ削除（owner想定）
+     - groups/{groupId}
+     - groupMembers: groupId一致を全削除
+     - joinRequests: groupId一致を全削除
   ========================= */
-  async deleteGroup(groupId) {
-    if (!groupId) throw new Error("invalid groupId");
+  async deleteGroup({ groupId }) {
+    if (!groupId) throw new Error("deleteGroup: groupId required");
 
-    const members = await getDocs(
-      query(collection(this.db, "groupMembers"), where("groupId", "==", groupId))
-    );
-    for (const d of members.docs) {
-      await deleteDoc(d.ref);
-    }
-
-    const requests = await getDocs(
-      query(collection(this.db, "groupJoinRequests"), where("groupId", "==", groupId))
-    );
-    for (const d of requests.docs) {
-      await deleteDoc(d.ref);
-    }
-
+    // groups doc
     await deleteDoc(doc(this.db, "groups", groupId));
+
+    // groupMembers 削除
+    {
+      const q = query(collection(this.db, "groupMembers"), where("groupId", "==", groupId));
+      const snap = await getDocs(q);
+      await this._batchDeleteDocs(snap.docs.map(d => d.ref));
+    }
+
+    // joinRequests 削除
+    {
+      const q = query(collection(this.db, "groupJoinRequests"), where("groupId", "==", groupId));
+      const snap = await getDocs(q);
+      await this._batchDeleteDocs(snap.docs.map(d => d.ref));
+    }
+  }
+
+  async _batchDeleteDocs(refs) {
+    const chunkSize = 450; // 500未満で安全側
+    for (let i = 0; i < refs.length; i += chunkSize) {
+      const batch = writeBatch(this.db);
+      for (const ref of refs.slice(i, i + chunkSize)) {
+        batch.delete(ref);
+      }
+      await batch.commit();
+    }
   }
 }
