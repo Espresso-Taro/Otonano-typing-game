@@ -1258,7 +1258,7 @@ function bindGroupUI() {
   });
   
   on(groupSearchBtn, "click", async () => {
-    const name = (groupSearchName?.value ?? "").trim();
+    const name = (groupSearchInput?.value ?? "").trim();
     if (!name) return;
   
     try {
@@ -1491,6 +1491,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
