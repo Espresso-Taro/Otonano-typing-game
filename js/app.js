@@ -1013,14 +1013,23 @@ async function loadPendingRequests() {
 
       const ng = document.createElement("button");
       ng.textContent = "却下";
-
+      
       on(ok, "click", async () => {
         try {
-          await groupSvc.approveMember(
-            r.id,
-            userMgr.getCurrentUserName()   // ← owner の userName
-          );
-
+          const ownerUid = State.authUser?.uid || "";
+          const ownerUserName = userMgr.getCurrentUserName();
+      
+          if (!ownerUid || !ownerUserName) {
+            alert("承認者情報が取得できません");
+            return;
+          }
+      
+          await groupSvc.approveMember({
+            requestId: r.id,
+            ownerUid,
+            ownerUserName
+          });
+      
           await loadPendingRequests();
           await refreshMyGroups();
         } catch (e) {
@@ -1028,6 +1037,7 @@ async function loadPendingRequests() {
           alert("承認に失敗しました");
         }
       });
+
 
       on(ng, "click", async () => {
         try {
@@ -1452,6 +1462,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
