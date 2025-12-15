@@ -1,327 +1,179 @@
-// js/userManager.js
 import {
-  collection,
+  getAuth,
+  onAuthStateChanged
+} from "firebase/auth";
+
+import {
+  getFirestore,
   doc,
-  getDocs,
   getDoc,
   setDoc,
   deleteDoc,
-  serverTimestamp,
-  runTransaction
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  collection,
+  query,
+  where,
+  getDocs,
+  serverTimestamp
+} from "firebase/firestore";
 
-/**
- * 目的：
- * - 同一端末で userName を切り替え可能
- * - 端末(=auth.uid)ごとに「最後に使った userName」を localStorage に保持
- * - その端末で userName が未選択/存在しない場合は、必ず新規 guest-****** を作って選択
- * - userName削除/改名時は localStorage の関連キーも掃除（currentGroupId_v1:* を消す）
- */
-export class UserManager {
-  constructor({ selectEl, addBtn, renameBtn, deleteBtn, db }) {
-    if (!db) throw new Error("UserManager: Firestore db is required");
+class UserManager {
+  constructor() {
+    this.auth = getAuth();
+    this.db = getFirestore();
 
-    this.db = db;
+    this.authUser = null;
+    this.currentUserName = null;
 
-    this.userSelect = selectEl || null;
-    this.addBtn = addBtn || null;
-    this.renameBtn = renameBtn || null;
-    this.deleteBtn = deleteBtn || null;
-
-    this.users = [];
-    this.currentUserName = "";
-    this._authUid = ""; // 端末ごと(匿名認証 uid)
-    this._listeners = new Set();
-
-    this._bindEvents();
+    this.onChangeCallbacks = [];
   }
 
   /* =========================
-     init（auth.uid が確定してから呼ぶ）
+     初期化
   ========================= */
-  async init(authUid) {
-    this._authUid = (authUid || "").toString();
-    if (!this._authUid) throw new Error("UserManager.init: authUid is required");
 
-    // 一覧取得
-    this.users = await this.listUsers();
+  init() {
+    onAuthStateChanged(this.auth, async (user) => {
+      this.authUser = user || null;
 
-    // 端末の最後の userName を復元
-    const last = this._getLastUserName();
-
-    // last が有効なら採用、なければ「必ずこの端末の guest を新規作成」
-    if (last && this.users.includes(last)) {
-      this.currentUserName = last;
-    } else {
-      // 重要：他端末の userNames が既にあっても「最初の1件を拾わない」
-      const guest = await this._createUniqueGuestUser();
-      this.currentUserName = guest;
-
-      // users 再取得（create後）
-      this.users = await this.listUsers();
-    }
-
-    this._setLastUserName(this.currentUserName);
-    this.render();
-    this._emitChanged();
-
-    return this.currentUserName;
-  }
-
-  /* =========================
-     イベント
-  ========================= */
-  onUserChanged(fn) {
-    if (typeof fn !== "function") return () => {};
-    this._listeners.add(fn);
-    return () => this._listeners.delete(fn);
-  }
-
-  _emitChanged() {
-    for (const fn of this._listeners) {
-      try {
-        fn(this.currentUserName);
-      } catch (e) {
-        console.error("onUserChanged handler error:", e);
+      if (!user) {
+        this.currentUserName = null;
+        this._notify();
+        return;
       }
-    }
-  }
 
-  _bindEvents() {
-    // select change
-    if (this.userSelect) {
-      this.userSelect.addEventListener("change", () => {
-        const v = (this.userSelect.value || "").toString();
-        if (!v) return;
+      // uid に紐づく userName を読み込む
+      const names = await this.loadMyUserNames();
 
-        this.currentUserName = v;
-        this._setLastUserName(v);
-        this._emitChanged();
-      });
-    }
+      if (names.length === 0) {
+        // ★ userName が1つも無い場合は自動生成
+        const autoName = this._generateGuestName();
+        await this.createUserName(autoName);
+        this.currentUserName = autoName;
+      } else {
+        // localStorage に保存されている userName を優先
+        const saved = localStorage.getItem(this._storageKey());
+        this.currentUserName = names.includes(saved)
+          ? saved
+          : names[0];
+      }
 
-    // add
-    if (this.addBtn) {
-      this.addBtn.addEventListener("click", async () => {
-        const name = prompt("ユーザー名を入力してください（全体で一意）");
-        if (!name) return;
-
-        try {
-          await this.addUser(name);
-        } catch (e) {
-          console.error("addUser failed", e);
-          alert(e.message || "ユーザー作成に失敗しました");
-        }
-      });
-    }
-
-    // rename
-    if (this.renameBtn) {
-      this.renameBtn.addEventListener("click", async () => {
-        if (!this.currentUserName) return;
-
-        const newName = prompt("新しいユーザー名", this.currentUserName);
-        if (!newName || newName === this.currentUserName) return;
-
-        try {
-          await this.renameUser(this.currentUserName, newName);
-        } catch (e) {
-          console.error("renameUser failed", e);
-          alert(e.message || "改名に失敗しました");
-        }
-      });
-    }
-
-    // delete
-    if (this.deleteBtn) {
-      this.deleteBtn.addEventListener("click", async () => {
-        if (!this.currentUserName) return;
-        if (!confirm(`ユーザー「${this.currentUserName}」を削除しますか？`)) return;
-
-        try {
-          await this.deleteUser(this.currentUserName);
-        } catch (e) {
-          console.error("deleteUser failed", e);
-          alert(e.message || "削除に失敗しました");
-        }
-      });
-    }
+      this._saveCurrent();
+      this._notify();
+    });
   }
 
   /* =========================
-     UI
+     public API
   ========================= */
-  render() {
-    if (!this.userSelect) return;
 
-    this.userSelect.innerHTML = "";
-    for (const name of this.users) {
-      const opt = document.createElement("option");
-      opt.value = name;
-      opt.textContent = name;
-      this.userSelect.appendChild(opt);
-    }
-
-    if (this.currentUserName) {
-      this.userSelect.value = this.currentUserName;
-    }
+  getAuthUser() {
+    return this.authUser;
   }
 
   getCurrentUserName() {
     return this.currentUserName;
   }
 
-  /* =========================
-     Firestore
-  ========================= */
-  async listUsers() {
-    const snap = await getDocs(collection(this.db, "userNames"));
-    return snap.docs.map(d => d.id).sort();
+  onChange(cb) {
+    this.onChangeCallbacks.push(cb);
   }
 
-  async addUser(nameRaw) {
-    const name = (nameRaw || "").toString().trim();
-    if (!name) throw new Error("ユーザー名が空です");
+  async loadMyUserNames() {
+    if (!this.authUser) return [];
 
-    const ref = doc(this.db, "userNames", name);
-    const snap = await getDoc(ref);
-    if (snap.exists()) throw new Error("このユーザー名は既に使われています");
+    const q = query(
+      collection(this.db, "userUserNames"),
+      where("uid", "==", this.authUser.uid)
+    );
 
-    await setDoc(ref, { createdAt: serverTimestamp() });
-
-    this.users = await this.listUsers();
-    this.currentUserName = name;
-    this._setLastUserName(name);
-    this.render();
-    this._emitChanged();
+    const snap = await getDocs(q);
+    return snap.docs.map(d => d.data().userName);
   }
 
-  async renameUser(oldNameRaw, newNameRaw) {
-    const oldName = (oldNameRaw || "").toString().trim();
-    const newName = (newNameRaw || "").toString().trim();
-    if (!oldName || !newName) throw new Error("ユーザー名が不正です");
-
-    const oldRef = doc(this.db, "userNames", oldName);
-    const newRef = doc(this.db, "userNames", newName);
-
-    const oldSnap = await getDoc(oldRef);
-    if (!oldSnap.exists()) throw new Error("元のユーザーが存在しません");
-
-    const newSnap = await getDoc(newRef);
-    if (newSnap.exists()) throw new Error("新しいユーザー名は既に使われています");
-
-    await setDoc(newRef, { createdAt: serverTimestamp() });
-    await deleteDoc(oldRef);
-
-    // localStorage 掃除（グループ選択など userName 紐付けキー）
-    this._cleanupLocalStorageForUser(oldName);
-    // 改名後のキーは app.js 側が新Nameで保存し直す想定なので、ここでは作らない
-
-    this.users = await this.listUsers();
-    this.currentUserName = newName;
-    this._setLastUserName(newName);
-    this.render();
-    this._emitChanged();
-  }
-
-  async deleteUser(nameRaw) {
-    const name = (nameRaw || "").toString().trim();
-    if (!name) return;
-
-    await deleteDoc(doc(this.db, "userNames", name));
-
-    // localStorage 掃除（グループ選択など userName 紐付けキー）
-    this._cleanupLocalStorageForUser(name);
-
-    this.users = await this.listUsers();
-
-    // この端末で「ユーザーが0人 or lastが消えた」なら必ず新規guestを作る
-    if (this.users.length === 0) {
-      const guest = await this._createUniqueGuestUser();
-      this.users = await this.listUsers();
-      this.currentUserName = guest;
-    } else {
-      // current を消した場合：last が残ってないので、先頭ではなく last を試し、無ければ先頭
-      const last = this._getLastUserName();
-      this.currentUserName = (last && this.users.includes(last)) ? last : this.users[0];
+  async createUserName(userName) {
+    if (!this.authUser) {
+      throw new Error("not signed in");
     }
 
-    this._setLastUserName(this.currentUserName);
-    this.render();
-    this._emitChanged();
+    const uid = this.authUser.uid;
+
+    // ① 全体一意（userNames）
+    const nameRef = doc(this.db, "userNames", userName);
+    const exists = await getDoc(nameRef);
+    if (exists.exists()) {
+      throw new Error("userName already exists");
+    }
+
+    await setDoc(nameRef, {
+      createdByUid: uid,
+      createdAt: serverTimestamp()
+    });
+
+    // ② uid 所有（userUserNames）
+    await setDoc(
+      doc(this.db, "userUserNames", `${uid}_${userName}`),
+      {
+        uid,
+        userName,
+        createdAt: serverTimestamp()
+      }
+    );
+
+    this.currentUserName = userName;
+    this._saveCurrent();
+    this._notify();
+  }
+
+  async deleteUserName(userName) {
+    if (!this.authUser) return;
+    if (this.currentUserName === userName) {
+      throw new Error("cannot delete current user");
+    }
+
+    const uid = this.authUser.uid;
+
+    await deleteDoc(doc(this.db, "userNames", userName));
+    await deleteDoc(doc(this.db, "userUserNames", `${uid}_${userName}`));
+
+    this._notify();
+  }
+
+  async switchUserName(userName) {
+    const names = await this.loadMyUserNames();
+    if (!names.includes(userName)) {
+      throw new Error("userName not owned by this uid");
+    }
+
+    this.currentUserName = userName;
+    this._saveCurrent();
+    this._notify();
   }
 
   /* =========================
-     guest を全端末で被らせない（Firestore で一意確定）
+     private
   ========================= */
-  async _createUniqueGuestUser() {
-    // 重要：端末が違っても同じ guest が作られないよう、transaction で「未使用」を確定させる
-    const maxTry = 30;
 
-    for (let i = 0; i < maxTry; i++) {
-      const suffix = this._randBase36(10); // 十分長く
-      const name = `guest-${suffix}`;
-      const ref = doc(this.db, "userNames", name);
-
-      const created = await runTransaction(this.db, async (tx) => {
-        const snap = await tx.get(ref);
-        if (snap.exists()) return null;
-        tx.set(ref, { createdAt: serverTimestamp() });
-        return name;
-      });
-
-      if (created) return created;
-    }
-
-    throw new Error("guestユーザー名の生成に失敗しました（リトライ上限）");
+  _storageKey() {
+    return `currentUserName:${this.authUser?.uid ?? ""}`;
   }
 
-  _randBase36(n) {
-    // crypto があれば優先
-    if (typeof crypto !== "undefined" && crypto.getRandomValues) {
-      const bytes = new Uint8Array(n);
-      crypto.getRandomValues(bytes);
-      return Array.from(bytes)
-        .map(b => (b % 36).toString(36))
-        .join("");
-    }
-    // fallback
-    let s = "";
-    while (s.length < n) s += Math.random().toString(36).slice(2);
-    return s.slice(0, n);
+  _saveCurrent() {
+    if (!this.authUser || !this.currentUserName) return;
+    localStorage.setItem(this._storageKey(), this.currentUserName);
   }
 
-  /* =========================
-     localStorage（端末ごとに last userName を保持）
-  ========================= */
-  _lastKey() {
-    return `lastUserName_v1:${this._authUid || "unknown"}`;
-  }
-
-  _getLastUserName() {
-    try {
-      return (localStorage.getItem(this._lastKey()) || "").toString();
-    } catch {
-      return "";
+  _notify() {
+    for (const cb of this.onChangeCallbacks) {
+      cb(this.currentUserName);
     }
   }
 
-  _setLastUserName(name) {
-    try {
-      if (!name) localStorage.removeItem(this._lastKey());
-      else localStorage.setItem(this._lastKey(), name);
-    } catch {
-      // ignore
-    }
-  }
-
-  _cleanupLocalStorageForUser(userName) {
-    // app.js が使っている userName紐付けキーの掃除
-    // - currentGroupId_v1:${userName}
-    try {
-      localStorage.removeItem(`currentGroupId_v1:${userName}`);
-    } catch {
-      // ignore
-    }
+  _generateGuestName() {
+    // 絶対衝突しない（uid + 時刻）
+    const uidPart = this.authUser.uid.slice(-6);
+    const timePart = Date.now().toString(36);
+    return `guest-${uidPart}-${timePart}`;
   }
 }
+
+export const userMgr = new UserManager();
