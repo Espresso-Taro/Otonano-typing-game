@@ -975,6 +975,9 @@ async function refreshMyGroups() {
   setSavedGroupIdFor(userName, nextGroupId);
 
   await onGroupChanged();
+  
+  if (State.currentGroupId && State.currentGroupRole === "owner") {
+  await loadPendingRequests();
 }
 
 
@@ -1072,7 +1075,6 @@ async function onGroupChanged() {
     pendingBox.style.display = (State.currentGroupId && State.currentGroupRole === "owner") ? "block" : "none";
   }
   if (State.currentGroupId && State.currentGroupRole === "owner") {
-    await loadPendingRequests();
   } else if (pendingList) {
     pendingList.innerHTML = "";
     const li = document.createElement("li");
@@ -1492,6 +1494,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
