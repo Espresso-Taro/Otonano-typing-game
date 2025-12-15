@@ -308,8 +308,9 @@ function updateThemeOptionsByCategory() {
     themeEl.appendChild(opt);
   }
 
-  // ★カテゴリ変更時は必ず theme をリセット
-  themeEl.value = "all";
+  // 通常モードのみ theme をリセット
+  if (!State.daily.enabled) {
+    themeEl.value = "all";
 }
 
 
@@ -372,6 +373,23 @@ function enableDailyTask() {
   State.daily.meta = item ?? null;
 
   setCurrentItem(item, { daily: true });
+  // 今日の課題で選ばれたカテゴリ・テーマを UI に反映
+  const meta = State.daily.meta;
+  if (meta) {
+    // カテゴリ反映
+    if (categoryEl && meta.category) {
+      categoryEl.value = meta.category;
+    }
+
+    // テーマ選択肢をカテゴリに合わせて再生成
+    updateThemeOptionsByCategory();
+
+    // テーマ反映
+    if (themeEl && meta.theme) {
+      themeEl.value = meta.theme;
+    }
+  }
+
   syncDailyInfoLabel();
   updateMetaInfo();
     // 今日の課題中はカテゴリ・テーマをロック
@@ -1236,6 +1254,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
