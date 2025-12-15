@@ -1525,6 +1525,8 @@ engine.attach();
  async function initApp() {
    await loadTrivia();
    initFilterOptions(); // ← ★これを追加
+
+   hide(renameUserBtn); //名前変更非表示
  
    // 初期：今日の課題は OFF、通常出題
    disableDailyTask();
@@ -1570,6 +1572,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
