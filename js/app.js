@@ -315,20 +315,20 @@ function initFilterOptions() {
   // 難度
   if (difficultyEl) {
     difficultyEl.innerHTML = `
-      <option value="easy">易</option>
-      <option value="normal" selected>普</option>
-      <option value="hard">難</option>
+      <option value="easy">難度：易</option>
+      <option value="normal" selected>難度：普</option>
+      <option value="hard">難度：難</option>
     `;
   }
 
   // 長さ
   if (lengthGroupEl) {
     lengthGroupEl.innerHTML = `
-      <option value="xs">極短</option>
-      <option value="short">短</option>
-      <option value="medium" selected>中</option>
-      <option value="long">長</option>
-      <option value="xl">極長</option>
+      <option value="xs">長さ：極短</option>
+      <option value="short">長さ：短</option>
+      <option value="medium" selected>長さ：中</option>
+      <option value="long">長さ：長</option>
+      <option value="xl">長さ：極長</option>
     `;
   }
 
@@ -1393,6 +1393,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
