@@ -662,7 +662,6 @@ function setCurrentItem(item, { daily = false } = {}) {
   engine.enableReadyState();
 
   if (inputEl) {
-    inputEl.value = "";
     inputEl.disabled = true; // Start押すまで無効
   }
 
@@ -1521,6 +1520,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
