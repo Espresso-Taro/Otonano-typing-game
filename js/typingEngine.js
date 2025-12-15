@@ -4,7 +4,7 @@
 // ・CPM = 文章長 ÷ 完了時間
 // ・スタート前は index.html の data-guide を表示（上揃え・横中央）
 // ・カウントダウン時のみ上下中央
-
+const START_GUIDE_TEXT = "Spaceキーで開始";
 export class TypingEngine {
   constructor(opts = {}) {
     this.textEl = opts.textEl || null;
@@ -293,22 +293,21 @@ export class TypingEngine {
   ========================= */
   _showGuideCharInTextarea() {
     if (!this.inputEl) return;
-
-    const guide = this.inputEl.dataset.guide || "";
-    if (!guide) return;
-
+  
     const el = this.inputEl;
     this._ensureBasePadding();
-
+  
     el.disabled = true;
     el.classList.remove("countdown");
     el.classList.add("input-guide");
-
-    el.value = guide;
-
+  
+    // ★ スタート前専用ガイドを value に入れる
+    el.value = START_GUIDE_TEXT;
+  
     // 上揃え・横中央
     this._restoreBasePadding();
   }
+
 
   /* =========================
      縦中央用（カウントダウン）
@@ -330,4 +329,5 @@ export class TypingEngine {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+
 
