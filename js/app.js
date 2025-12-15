@@ -1027,7 +1027,7 @@ async function loadPendingRequests() {
             ownerUserName: userMgr.getCurrentUserName()
           });
 
-          await loadPendingRequests();
+          //await loadPendingRequests();
           await refreshMyGroups();
         } catch (e) {
           console.error("approve failed:", e);
@@ -1039,7 +1039,7 @@ async function loadPendingRequests() {
       on(ng, "click", async () => {
         try {
           await groupSvc.rejectMember({ requestId: r.id });
-          await loadPendingRequests();
+          await refreshMyGroups(); // ★ 統一
         } catch (e) {
           console.error("reject failed:", e);
           alert("却下に失敗しました");
@@ -1495,6 +1495,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
