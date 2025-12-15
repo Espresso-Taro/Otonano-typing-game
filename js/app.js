@@ -1417,7 +1417,7 @@ function bindGroupUI() {
 /* =========================================================
    TypingEngine instance (must be after DOM refs)
 ========================================================= */
-function onTypingFinish({ metrics, meta }) {
+async function onTypingFinish({ metrics, meta }) {
   try {
     const cpm = Math.round(Number(metrics?.cpm ?? 0));
     const timeSec = Math.round(Number(metrics?.timeSec ?? 0) * 10) / 10;
@@ -1542,6 +1542,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
