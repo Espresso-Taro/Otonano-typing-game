@@ -1409,23 +1409,12 @@ onAuthStateChanged(auth, async (user) => {
 
   if (!user) return;
 
-  // saved group
-  const saved = localStorage.getItem(GROUP_STORAGE_KEY) || "";
-  State.currentGroupId = saved;
-
   try {
     await initApp();
-
-    // 保存していたグループがある場合、select の反映は refreshMyGroups() の中で行う
   } catch (e) {
     console.error("initApp error:", e);
   }
 });
-
-
-
-
-
 
 
 
