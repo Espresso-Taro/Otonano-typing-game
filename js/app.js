@@ -1206,17 +1206,13 @@ async function loadMyAnalytics() {
   const userName = userMgr.getCurrentUserName?.();
   if (!userName) return;
 
-  if (analyticsTitle) {
-    setText(
-      analyticsTitle,
-      `入力分析（難度：${diffLabel(State.activeRankDiff)}）`
-    );
-  }
+  setText(
+    analyticsTitle,
+    `入力分析（難度：${diffLabel(State.activeRankDiff)}）`
+  );
 
-  hide(analyticsLabel);
-  bestByDifficultyUL.innerHTML = "";
+  bestByDifficulty.innerHTML = "";
 
-  // Firestore から自分のスコア取得
   const q = query(
     collection(db, "scores"),
     where("userName", "==", userName),
@@ -1228,40 +1224,39 @@ async function loadMyAnalytics() {
   const rows = snap.docs.map(d => d.data());
 
   if (rows.length === 0) {
-    const li = document.createElement("li");
-    li.textContent = "まだ記録がありません。";
-    bestByDifficultyUL.appendChild(li);
+    bestByDifficulty.textContent = "まだ記録がありません。";
     return;
   }
 
-  // ベストCPM
   const best = rows.reduce((a, b) =>
     Number(b.cpm) > Number(a.cpm) ? b : a
   );
 
-  const bestCPM = Math.round(best.cpm);
-  const bestRank = rankByCPM(bestCPM, State.activeRankDiff); // ← S+ 等含む
-  const stage = rankStage(bestRank);                         // ← S / SS / etc
+  const bestScore = Math.round(best.cpm);
+  const rank = rankByCPM(bestScore, State.activeRankDiff);
+  const stage = rankStage(rank);
   const msg = RANK_MESSAGES[stage];
 
-  const li = document.createElement("li");
-  li.innerHTML = `
-    <div style="font-weight:900;font-size:1.15em;">
-      ベストスコア：${bestCPM} CPM
-    </div>
-    <div style="margin-top:4px;">
-      ランク：<strong>${bestRank}</strong>
-    </div>
-    <div style="margin-top:6px;">
-      <strong>称号：${msg.title}</strong>
-    </div>
-    <div style="color:#555;margin-top:2px;">
-      ${msg.message}
-    </div>
+  bestByDifficulty.innerHTML = `
+    <table class="powerTable">
+      <tr>
+        <td class="label">ランク</td>
+        <td class="rank">${rank}</td>
+      </tr>
+      <tr>
+        <td class="label">ベストスコア</td>
+        <td class="score">${bestScore}</td>
+      </tr>
+      <tr>
+        <td colspan="2" class="message">
+          『${msg.title}』<br>
+          ${msg.message}
+        </td>
+      </tr>
+    </table>
   `;
-
-  bestByDifficultyUL.appendChild(li);
 }
+
 
 
 /* =========================================================
@@ -1973,6 +1968,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
