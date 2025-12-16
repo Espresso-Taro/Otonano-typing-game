@@ -279,9 +279,9 @@
       line-height: 36px;
     }
     
-    /* ヘッダー（ユーザー/グループ）の直後のカードに余白を追加 */
-    header + main > .card:first-of-type {
-      margin-top: 16px;
+    /* ヘッダー直下の余白をカード間と同じにする */
+    header {
+      padding-bottom: 0;
     }
 
 
@@ -500,6 +500,7 @@
   <script type="module" src="./js/app.js"></script>
 </body>
 </html>
+
 
 
 
