@@ -1284,7 +1284,7 @@ async function loadDailyRanking() {
 
     // ③ 表示（最新 userName を使用）
     rankingSvc.renderList(dailyRankingUL, rows, {
-      highlightPersonalId: userMgr.getCurrentPersonalId?.() ?? null,
+      highlightPersonalId: userMgr.getCurrentPersonalId() || null,
       userNameMap
     });
 
@@ -2134,6 +2134,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
