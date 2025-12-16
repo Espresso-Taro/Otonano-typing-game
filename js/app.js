@@ -1296,23 +1296,25 @@ async function loadDailyRanking() {
 
 
 async function loadOverallRanking() {
-  if (!rankingUL) return;
+  if (!rankingUL) return [];
 
   hide(overallLabel);
 
   try {
-    // 全国ランキング：長さ/テーマでフィルタしない（ranking.js の方針に合わせる）
-    const rows = await rankingSvc.loadOverall({ difficulty: State.activeRankDiff });
-  rankingSvc.renderList(rankingUL, rows, {
-    highlightPersonalId: userMgr.getCurrentPersonalId(),
-    userNameMap
-  });
+    // 全国ランキング：取得のみ
+    const rows = await rankingSvc.loadOverall({
+      difficulty: State.activeRankDiff
+    });
+
+    return rows;
 
   } catch (e) {
     console.error("loadOverallRanking error:", e);
     rankingUL.innerHTML = "<li>ランキングの読み込みに失敗しました</li>";
+    return [];
   }
 }
+
 
 async function loadGroupRanking() {
   if (!groupRankingBox || !groupRankingUL) return;
@@ -1342,22 +1344,38 @@ async function loadGroupRanking() {
 }
 
 async function reloadAllRankings() {
-  const rows = await rankingSvc.loadOverall({
-    difficulty: State.activeRankDiff,
-    lengthGroup: fixedLengthByDifficulty(State.activeRankDiff)
-  });
 
-  const userNameMap = await buildUserNameMapFromScores(db, rows);
-  
-  rankingSvc.renderList(rankingUL, rows, {
+  // ===== 全国ランキング =====
+  const overallRows = await loadOverallRanking();
+  const overallUserNameMap =
+    await buildUserNameMapFromScores(db, overallRows);
+
+  rankingSvc.renderList(rankingUL, overallRows, {
     highlightPersonalId: userMgr.getCurrentPersonalId(),
-    userNameMap
+    userNameMap: overallUserNameMap
   });
 
-  await loadDailyRanking();
-  await loadOverallRanking();
-  await loadGroupRanking();
+  // ===== 今日の課題ランキング =====
+  const dailyRows = await loadDailyRanking();
+  const dailyUserNameMap =
+    await buildUserNameMapFromScores(db, dailyRows);
+
+  rankingSvc.renderList(dailyRankingUL, dailyRows, {
+    highlightPersonalId: userMgr.getCurrentPersonalId(),
+    userNameMap: dailyUserNameMap
+  });
+
+  // ===== グループランキング =====
+  const groupRows = await loadGroupRanking();
+  const groupUserNameMap =
+    await buildUserNameMapFromScores(db, groupRows);
+
+  rankingSvc.renderList(groupRankingUL, groupRows, {
+    highlightPersonalId: userMgr.getCurrentPersonalId(),
+    userNameMap: groupUserNameMap
+  });
 }
+
 
 /* =========================================================
    Analytics (最低限で落ちない)
@@ -2137,6 +2155,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
