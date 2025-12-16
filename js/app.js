@@ -451,6 +451,10 @@ function rankByCPM(cpm, difficulty = getPracticeDifficulty()) {
   return r;
 }
 
+function isMasterOrAbove(rank) {
+  return rankIndex(rank) >= rankIndex("S-");
+}
+
 
 /* =========================================================
    Modal
@@ -1809,6 +1813,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
