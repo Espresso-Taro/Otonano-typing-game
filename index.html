@@ -371,6 +371,7 @@
     .powerTable {
       border: none;              /* ← ここ重要 */
       margin: 0;
+      min-width: 0;
     }
     
     /* 表のセルはそのまま */
@@ -391,6 +392,28 @@
       align-items: center;
       justify-content: center;
     }
+
+    /* ===== スマホでも横並びを維持（画像を縮小） ===== */
+    @media (max-width: 600px) {
+      .powerInner {
+        flex-direction: row;      /* 念のため明示 */
+        flex-wrap: nowrap;        /* 折り返さない */
+      }
+    
+      #rankImageBox {
+        width: 96px;              /* ← 小さくする */
+        min-height: 96px;
+    
+        border-left: 1px solid #000;
+      }
+    
+      /* SVG自体も枠にフィットさせる */
+      #rankImageBox svg {
+        width: 80px;
+        height: 80px;
+      }
+    }
+
 
   </style>
 </head>
@@ -615,6 +638,7 @@
   <script type="module" src="./js/app.js"></script>
 </body>
 </html>
+
 
 
 
