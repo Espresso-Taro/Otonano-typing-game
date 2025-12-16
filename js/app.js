@@ -1667,9 +1667,9 @@ function bindGroupUI() {
       const ownerUserName = userMgr.getCurrentUserName();
   
       const created = await groupSvc.createGroup({
-        groupName,
-        ownerUid,
-        ownerUserName
+        ownerPersonalId: userMgr.getCurrentPersonalId(),
+        ownerUid: auth.currentUser.uid,
+        ownerUserName: userMgr.getCurrentUserName()
       });
   
       groupCreateName.value = "";
@@ -1978,6 +1978,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
