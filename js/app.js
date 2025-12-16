@@ -2062,9 +2062,14 @@ const engine = new TypingEngine({
   textEl,
   inputEl,
   resultEl,
-  onFinish: onTypingFinish
+  onFinish: async ({ metrics, meta }) => {
+    // 既存処理（スコア保存・モーダル表示など）
+    await handleFinish({ metrics, meta });
+
+    // ★ 追加：入力分析を即更新
+    await loadMyAnalytics();
+  }
 });
-engine.attach();
 
 /* =========================================================
    App init
@@ -2142,6 +2147,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
