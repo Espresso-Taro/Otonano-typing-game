@@ -451,9 +451,39 @@ function rankByCPM(cpm, difficulty = getPracticeDifficulty()) {
   return r;
 }
 
+function rankIndex(rank) {
+  const order = [
+    "G-", "G", "G+",
+    "F-", "F", "F+",
+    "E-", "E", "E+",
+    "D-", "D", "D+",
+    "C-", "C", "C+",
+    "B-", "B", "B+",
+    "A-", "A", "A+",
+    "S-", "S", "S+",
+    "SS-", "SS", "SS+",
+    "SSS-", "SSS", "SSS+"
+  ];
+  return order.indexOf(rank);
+}
+
+function rankStage(rank) {
+  if (rank.startsWith("SSS")) return "SSS";
+  if (rank.startsWith("SS"))  return "SS";
+  if (rank.startsWith("S"))   return "S";
+  if (rank.startsWith("A"))   return "A";
+  if (rank.startsWith("B"))   return "B";
+  if (rank.startsWith("C"))   return "C";
+  if (rank.startsWith("D"))   return "D";
+  if (rank.startsWith("E"))   return "E";
+  if (rank.startsWith("F"))   return "F";
+  return "G";
+}
+
 function isMasterOrAbove(rank) {
   return rankIndex(rank) >= rankIndex("S-");
 }
+
 
 
 /* =========================================================
@@ -1813,6 +1843,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
