@@ -1342,7 +1342,7 @@ async function loadGroupRanking() {
 }
 
 async function reloadAllRankings() {
-  const rows = await rankingSvc.loadOverallRanking({
+  const rows = await rankingSvc.loadOverall({
     difficulty: State.activeRankDiff,
     lengthGroup: fixedLengthByDifficulty(State.activeRankDiff)
   });
@@ -2137,6 +2137,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
