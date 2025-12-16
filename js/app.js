@@ -151,6 +151,37 @@ const userMgr = new UserManager({
 const rankingSvc = new RankingService({ db });
 const groupSvc = new GroupService(db);
 
+async function submitScoreDoc({
+  metrics,
+  meta,
+  difficulty,
+  lengthGroup,
+  theme,
+  category,
+  isDailyTask
+}) {
+  if (!State.authUser) return;
+
+  try {
+    await addDoc(collection(db, "scores"), {
+      uid: State.authUser.uid,
+      userName: userMgr.getCurrentUserName(),
+      cpm: metrics.cpm,
+      rank: metrics.rank,
+      timeSec: metrics.timeSec,
+      difficulty,
+      lengthGroup,
+      theme,
+      category,
+      isDailyTask: !!isDailyTask,
+      groupId: State.currentGroupId || null,
+      createdAt: serverTimestamp()
+    });
+  } catch (e) {
+    console.error("submitScoreDoc failed:", e);
+  }
+}
+
 // userName切替時：グループSelect即更新 + ランキング更新
 userMgr.onUserChanged(async () => {
   // ★ ユーザーごとの前回状態を復元
@@ -1843,6 +1874,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
