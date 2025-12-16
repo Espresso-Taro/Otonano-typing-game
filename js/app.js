@@ -1284,17 +1284,13 @@ async function loadMyAnalytics() {
       </tr>
     </table>
   `;
-}
 
-// ===== 称号画像の表示 =====
-const imgBox = document.getElementById("rankImageBox");
-
-if (imgBox) {
-  if (RANK_IMAGES[stage]) {
-    imgBox.innerHTML = RANK_IMAGES[stage];
-  } else {
-    imgBox.innerHTML = ""; // 該当ランクなしの場合は空
+  // ===== 称号画像の表示（★ここに置く）=====
+  const imgBox = document.getElementById("rankImageBox");
+  if (imgBox) {
+    imgBox.innerHTML = RANK_IMAGES[stage] ?? "";
   }
+}
 }
 
 /* =========================================================
@@ -2011,6 +2007,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
