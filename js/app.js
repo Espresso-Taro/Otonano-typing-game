@@ -1235,10 +1235,7 @@ async function loadMyAnalytics() {
   const userName = userMgr.getCurrentUserName?.();
   if (!userName) return;
 
-  setText(
-    analyticsTitle,
-    `入力分析（難度：${diffLabel(State.activeRankDiff)}）`
-  );
+  setText(analyticsTitle, "入力分析");
 
   bestByDifficulty.innerHTML = "";
 
@@ -2014,6 +2011,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
