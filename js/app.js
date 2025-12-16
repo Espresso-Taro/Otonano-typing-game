@@ -1329,8 +1329,8 @@ async function reloadAllRankings() {
    Analytics (最低限で落ちない)
 ========================================================= */
 async function loadMyAnalytics() {
-  const userName = userMgr.getCurrentPersonalId?.();
-  if (!userName) return;
+  const personalId = userMgr.getCurrentPersonalId();
+  if (!personalId) return;
 
   setText(analyticsTitle, "入力分析");
 
@@ -1338,7 +1338,7 @@ async function loadMyAnalytics() {
 
   const q = query(
     collection(db, "scores"),
-    where("userName", "==", userName),
+    where("personalId", "==", personalId),
     where("difficulty", "==", State.activeRankDiff),
     limit(500)
   );
@@ -2103,6 +2103,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
