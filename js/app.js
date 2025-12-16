@@ -56,6 +56,17 @@ function hide(el) {
   if (!el) return;
   el.style.display = "none"; // レイアウトから消す（余白が残らない）
 }
+function bindToggle(btnId, panelId) {
+  const btn = $(btnId);
+  const panel = $(panelId);
+  if (!btn || !panel) return;
+
+  btn.addEventListener("click", () => {
+    const open = panel.classList.toggle("open");
+    btn.textContent = open ? btn.textContent.replace("▾", "▲") : btn.textContent.replace("▲", "▾");
+  });
+}
+
 
 
 /* =========================================================
@@ -1740,3 +1751,4 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
