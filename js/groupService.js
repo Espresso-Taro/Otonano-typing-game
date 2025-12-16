@@ -25,48 +25,49 @@ export class GroupService {
   /* =========================
      グループ作成（owner）
   ========================= */
-  async createGroup({ groupName, ownerUid, ownerUserName }) {
+  async createGroup({ groupName, ownerPersonalId, ownerUid, ownerUserName }) {
     const name = (groupName || "").toString().trim();
     if (!name) throw new Error("グループ名が空です");
-    if (!ownerUid || !ownerUserName) throw new Error("owner情報が不正です");
-
+    if (!ownerPersonalId || !ownerUid || !ownerUserName) {
+      throw new Error("owner情報が不正です");
+    }
+  
     const groupRef = doc(collection(this.db, "groups"));
     const groupId = groupRef.id;
-
+  
     await setDoc(groupRef, {
       name,
+      ownerPersonalId,
       ownerUid,
       ownerUserName,
       createdAt: serverTimestamp()
     });
-
-    const memRef = doc(
-      this.db,
-      "groupMembers",
-      memberIdOf(ownerUid, ownerUserName, groupId)
+  
+    await setDoc(
+      doc(this.db, "groupMembers", memberIdOf(ownerPersonalId, groupId)),
+      {
+        groupId,
+        personalId: ownerPersonalId,
+        uid: ownerUid,
+        userName: ownerUserName,
+        role: "owner",
+        createdAt: serverTimestamp()
+      }
     );
-
-    await setDoc(memRef, {
-      groupId,
-      uid: ownerUid,
-      userName: ownerUserName,
-      role: "owner",
-      createdAt: serverTimestamp()
-    });
-
+  
     return { groupId, name };
   }
+
 
   /* =========================
      自分の所属グループ一覧
   ========================= */
-  async getMyGroups(uid, userName) {
-    if (!uid || !userName) return [];
-
+  async getMyGroups(personalId) {
+    if (!personalId) return [];
+  
     const q = query(
       collection(this.db, "groupMembers"),
-      where("uid", "==", uid),
-      where("userName", "==", userName)
+      where("personalId", "==", personalId)
     );
 
     const snap = await getDocs(q);
@@ -123,15 +124,18 @@ export class GroupService {
   /* =========================
      参加申請（ID固定）
   ========================= */
-  async requestJoin({ groupId, uid, userName, targetOwnerUserName }) {
+  async requestJoin({ groupId, personalId, uid, userName, targetOwnerUserName }) {
+    if (!groupId || !personalId) throw new Error("requestJoin: params invalid");
+  
     const reqRef = doc(
       this.db,
       "groupJoinRequests",
-      `${uid}::${userName}::${groupId}`
+      memberIdOf(personalId, groupId)
     );
-
+  
     await setDoc(reqRef, {
       groupId,
+      personalId,
       uid,
       userName,
       targetOwnerUserName,
@@ -157,14 +161,15 @@ export class GroupService {
   /* =========================
      ★内部：同一人物の申請を全削除
   ========================= */
-  async _deleteDuplicateJoinRequests({ groupId, uid, userName }) {
+  async _deleteDuplicateJoinRequests({ groupId, personalId }) {
+    if (!groupId || !personalId) return;
+  
     const q = query(
       collection(this.db, "groupJoinRequests"),
       where("groupId", "==", groupId),
-      where("uid", "==", uid),
-      where("userName", "==", userName)
+      where("personalId", "==", personalId)
     );
-
+  
     const snap = await getDocs(q);
     await this._batchDeleteDocs(snap.docs.map(d => d.ref));
   }
@@ -174,23 +179,24 @@ export class GroupService {
   ========================= */
   async approveMember({ requestId, ownerUid, ownerUserName }) {
     if (!requestId) throw new Error("approveMember: requestId required");
-
+  
     const reqRef = doc(this.db, "groupJoinRequests", requestId);
     const reqSnap = await getDoc(reqRef);
     if (!reqSnap.exists()) throw new Error("申請が存在しません");
-
+  
     const r = reqSnap.data();
-    const { groupId, uid, userName } = r;
-
+    const { groupId, personalId, uid, userName } = r;
+  
     const memRef = doc(
       this.db,
       "groupMembers",
-      memberIdOf(uid, userName, groupId)
+      memberIdOf(personalId, groupId)
     );
-
+  
     const batch = writeBatch(this.db);
     batch.set(memRef, {
       groupId,
+      personalId,
       uid,
       userName,
       role: "member",
@@ -200,9 +206,8 @@ export class GroupService {
     });
     batch.delete(reqRef);
     await batch.commit();
-
-    // ★ 念のため過去分も全削除
-    await this._deleteDuplicateJoinRequests({ groupId, uid, userName });
+  
+    await this._deleteDuplicateJoinRequests({ groupId, personalId });
   }
 
   /* =========================
@@ -210,24 +215,25 @@ export class GroupService {
   ========================= */
   async rejectMember({ requestId }) {
     if (!requestId) throw new Error("rejectMember: requestId required");
-
+  
     const reqRef = doc(this.db, "groupJoinRequests", requestId);
     const reqSnap = await getDoc(reqRef);
     if (!reqSnap.exists()) return;
-
-    const { groupId, uid, userName } = reqSnap.data();
-    await this._deleteDuplicateJoinRequests({ groupId, uid, userName });
+  
+    const { groupId, personalId } = reqSnap.data();
+    await this._deleteDuplicateJoinRequests({ groupId, personalId });
   }
 
   /* =========================
      退出
   ========================= */
-  async leaveGroup({ groupId, uid, userName }) {
-    if (!groupId || !uid || !userName) throw new Error("leaveGroup: params invalid");
+  async leaveGroup({ groupId, personalId }) {
+    if (!groupId || !personalId) throw new Error("leaveGroup: params invalid");
+  
     const memRef = doc(
       this.db,
       "groupMembers",
-      memberIdOf(uid, userName, groupId)
+      memberIdOf(personalId, groupId)
     );
     await deleteDoc(memRef);
   }
@@ -270,4 +276,5 @@ export class GroupService {
     }
   }
 }
+
 
