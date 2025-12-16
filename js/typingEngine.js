@@ -233,7 +233,7 @@ export class TypingEngine {
 
     return {
       cpm,
-      rank: this.calcRank(cpm),
+      rank = this.calcRank(cpm, this.meta?.difficulty);
       timeSec: Math.round(timeSec * 1000) / 1000,
       length: len,
       kpm,
@@ -241,15 +241,39 @@ export class TypingEngine {
     };
   }
 
-  calcRank(cpm) {
-    if (cpm >= 520) return "SSS";
-    if (cpm >= 440) return "SS";
-    if (cpm >= 380) return "S";
-    if (cpm >= 300) return "A";
-    if (cpm >= 220) return "B";
-    if (cpm >= 150) return "C";
-    return "D";
+  // typingEngine.js に追加/置換
+  calcRank(cpm, difficulty = "normal") {
+    const base = Number(cpm) || 0;
+  
+    // 難易度補正（easyは厳しめ / hardは優しめ）
+    const k =
+      difficulty === "easy" ? 1.05 :
+      difficulty === "hard" ? 0.92 : 1.0;
+  
+    const v = base / k;
+  
+    // 下から順に「到達ライン」。ここを調整すれば難易度感が変わる
+    const thresholds = [
+      ["G-", 0],   ["G", 80],   ["G+", 100],
+      ["F-", 120], ["F", 140],  ["F+", 160],
+      ["E-", 180], ["E", 200],  ["E+", 220],
+      ["D-", 240], ["D", 260],  ["D+", 280],
+      ["C-", 300], ["C", 320],  ["C+", 340],
+      ["B-", 360], ["B", 380],  ["B+", 400],
+      ["A-", 420], ["A", 450],  ["A+", 480],
+      ["S-", 510], ["S", 540],  ["S+", 570],
+      ["SS-", 600],["SS", 640], ["SS+", 680],
+      ["SSS-", 720],["SSS", 770],["SSS+", 820],
+    ];
+  
+    let r = "G-";
+    for (const [name, need] of thresholds) {
+      if (v >= need) r = name;
+      else break;
+    }
+    return r;
   }
+
 
   /* =========================
      見本文レンダリング
@@ -329,6 +353,7 @@ export class TypingEngine {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+
 
 
 
