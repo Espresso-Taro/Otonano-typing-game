@@ -526,6 +526,51 @@ function isMasterOrAbove(rank) {
   return rankIndex(rank) >= rankIndex("S-");
 }
 
+const RANK_MESSAGES = {
+  G: {
+    title: "入門",
+    message: "焦るな。まずは打ち切れ。それが第一歩だ。"
+  },
+  F: {
+    title: "修練",
+    message: "迷いが減れば速さになる。稽古は裏切らない。"
+  },
+  E: {
+    title: "初段",
+    message: "流れを切るな。呼吸で文章を運べ。"
+  },
+  D: {
+    title: "中段",
+    message: "安定は強さ。地味こそ最強の型。"
+  },
+  C: {
+    title: "上段",
+    message: "先を見ろ。勝ちは準備で決まる。"
+  },
+  B: {
+    title: "師範代",
+    message: "速さに品が出てきた。余裕が力だ。"
+  },
+  A: {
+    title: "師範",
+    message: "難所で崩れない。それが実力の証。"
+  },
+  S: {
+    title: "達人",
+    message: "無駄を削れ。軽さが速さになる。"
+  },
+  SS: {
+    title: "宗匠",
+    message: "型は裏切らない。数字がそれを証明する。"
+  },
+  SSS: {
+    title: "無双",
+    message: "静かに勝つ。ここが到達点だ。"
+  }
+};
+
+
+
 
 
 /* =========================================================
@@ -1158,23 +1203,66 @@ async function reloadAllRankings() {
    Analytics (最低限で落ちない)
 ========================================================= */
 async function loadMyAnalytics() {
-  if (analyticsTitle) setText(analyticsTitle, "成績・分析");
+  const userName = userMgr.getCurrentUserName?.();
+  if (!userName) return;
+
+  if (analyticsTitle) {
+    setText(
+      analyticsTitle,
+      `入力分析（難度：${diffLabel(State.activeRankDiff)}）`
+    );
+  }
+
   hide(analyticsLabel);
+  bestByDifficultyUL.innerHTML = "";
 
-  if (bestByDifficultyUL) {
-    bestByDifficultyUL.innerHTML = "";
+  // Firestore から自分のスコア取得
+  const q = query(
+    collection(db, "scores"),
+    where("userName", "==", userName),
+    where("difficulty", "==", State.activeRankDiff),
+    limit(500)
+  );
+
+  const snap = await getDocs(q);
+  const rows = snap.docs.map(d => d.data());
+
+  if (rows.length === 0) {
     const li = document.createElement("li");
-    li.textContent = "（分析は今後拡張）";
+    li.textContent = "まだ記録がありません。";
     bestByDifficultyUL.appendChild(li);
+    return;
   }
 
-  if (myRecentUL) {
-    myRecentUL.innerHTML = "";
-    const li = document.createElement("li");
-    li.textContent = "（最近の記録は今後拡張）";
-    myRecentUL.appendChild(li);
-  }
+  // ベストCPM
+  const best = rows.reduce((a, b) =>
+    Number(b.cpm) > Number(a.cpm) ? b : a
+  );
+
+  const bestCPM = Math.round(best.cpm);
+  const bestRank = rankByCPM(bestCPM, State.activeRankDiff); // ← S+ 等含む
+  const stage = rankStage(bestRank);                         // ← S / SS / etc
+  const msg = RANK_MESSAGES[stage];
+
+  const li = document.createElement("li");
+  li.innerHTML = `
+    <div style="font-weight:900;font-size:1.15em;">
+      ベストスコア：${bestCPM} CPM
+    </div>
+    <div style="margin-top:4px;">
+      ランク：<strong>${bestRank}</strong>
+    </div>
+    <div style="margin-top:6px;">
+      <strong>称号：${msg.title}</strong>
+    </div>
+    <div style="color:#555;margin-top:2px;">
+      ${msg.message}
+    </div>
+  `;
+
+  bestByDifficultyUL.appendChild(li);
 }
+
 
 /* =========================================================
    Group UI
@@ -1885,6 +1973,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
