@@ -300,19 +300,14 @@ export class UserManager {
     // Firestore 再取得は不要。ローカルで除外する
     this.users = this.users.filter(u => u.personalId !== personalId);
   
-    if (this.users.length === 0) {
-      const guest = await this._createUniqueGuestUser();
-      this.users = await this.listUsers();
-      this.currentPersonalId = guest.personalId;
-      this.currentUserName = guest.userName;
-    } else {
-      this.currentPersonalId = this.users[0].personalId;
-      this.currentUserName = this.users[0].userName;
-    }
-  
+    // 削除後：常に既存ユーザーの先頭を current にする
+    this.currentPersonalId = this.users[0].personalId;
+    this.currentUserName = this.users[0].userName;
+    
     this._setLastPersonalId(this.currentPersonalId);
     this.render();
     this._emitChanged();
+
   }
 
   /* =========================
@@ -369,5 +364,6 @@ export class UserManager {
     if (personalId) localStorage.removeItem(`currentGroupId_v1:${personalId}`);
   }
 }
+
 
 
