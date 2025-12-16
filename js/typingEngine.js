@@ -233,7 +233,7 @@ export class TypingEngine {
 
     return {
       cpm,
-      rank = this.calcRank(cpm, this.meta?.difficulty);
+      rank: this.calcRank(cpm, this.meta?.difficulty),
       timeSec: Math.round(timeSec * 1000) / 1000,
       length: len,
       kpm,
@@ -353,6 +353,7 @@ export class TypingEngine {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+
 
 
 
