@@ -1382,44 +1382,44 @@ on(themeEl, "change", () => {
   persistPrefsNow(); // ★追加
 });
 
-  on(dailyTaskEl, "change", () => {
-    if (dailyTaskEl.checked) {
-      // ★ ONにする直前の状態を退避
-      State.beforeDailyPrefs = {
-        lengthGroup: lengthGroupEl?.value ?? "medium",
-        category: categoryEl?.value ?? "all",
-        theme: themeEl?.value ?? "all"
-      };
-  
-      enableDailyTask();
-    } else {
-      disableDailyTask();
-  
-      // ★ OFFに戻したら元の状態を復元
-      if (State.beforeDailyPrefs) {
-        const { lengthGroup, category, theme } = State.beforeDailyPrefs;
-  
-        if (lengthGroupEl) lengthGroupEl.value = lengthGroup;
-        if (categoryEl) categoryEl.value = category;
-  
-        // カテゴリ → テーマの順序が重要
-        updateThemeOptionsByCategory();
-        if (themeEl) themeEl.value = theme;
-  
-        State.beforeDailyPrefs = null;
-      }
-  
-      buildPool();
-      if (!State.hasNoItem) {
-        setCurrentItem(pickRandomDifferentText(), { daily: false });
-      }
-      updateMetaInfo();
-  
-      persistPrefsNow(); // ★OFF後の状態を保存
+on(dailyTaskEl, "change", () => {
+  if (dailyTaskEl.checked) {
+    // ONにする直前の状態を退避
+    State.beforeDailyPrefs = {
+      lengthGroup: lengthGroupEl?.value ?? "medium",
+      category: categoryEl?.value ?? "all",
+      theme: themeEl?.value ?? "all"
+    };
+
+    enableDailyTask();
+  } else {
+    disableDailyTask();
+
+    // OFFに戻したら元の状態を復元
+    if (State.beforeDailyPrefs) {
+      const { lengthGroup, category, theme } = State.beforeDailyPrefs;
+
+      if (lengthGroupEl) lengthGroupEl.value = lengthGroup;
+      if (categoryEl) categoryEl.value = category;
+
+      updateThemeOptionsByCategory();
+      if (themeEl) themeEl.value = theme;
+
+      State.beforeDailyPrefs = null;
     }
-  
-    reloadAllRankings();
-  });
+
+    buildPool();
+    if (!State.hasNoItem) {
+      setCurrentItem(pickRandomDifferentText(), { daily: false });
+    }
+    updateMetaInfo();
+
+    persistPrefsNow();
+  }
+
+  reloadAllRankings();
+});
+
 
 
 function bindRankDiffTabs() {
@@ -1745,6 +1745,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
