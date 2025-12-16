@@ -260,46 +260,47 @@
       
       <!-- 折りたたみ -->
       <div id="groupPanel" class="collapsible">
-        <!-- ここに 退出 / 作成 / 検索 / pendingBox などが入る -->
-      </div>
-
+      
         <div class="row">
           <div class="inlineBtns">
             <button id="leaveGroupBtn" type="button" disabled>退出</button>
             <button id="deleteGroupBtn" type="button" disabled>グループ削除</button>
           </div>
         </div>
+      
+        <p class="hint">
+          ※ 参加中グループを選ぶと、以降のスコアはそのグループにも記録されます（個人記録も残ります）。
+        </p>
+      
+        <div class="dividerLine"></div>
+      
+        <!-- グループ作成 -->
+        <div class="row">
+          <input id="groupCreateName" type="text" placeholder="新しいグループ名（例：営業チーム）" />
+          <button id="groupCreateBtn" type="button">グループ作成</button>
+        </div>
+      
+        <div class="dividerLine"></div>
+      
+        <!-- グループ検索 -->
+        <div class="row">
+          <input id="groupSearchInput" type="text" placeholder="グループ名で検索" />
+          <button id="groupSearchBtn" type="button">検索</button>
+        </div>
+      
+        <ul id="groupSearchResult" style="margin-top:10px;"></ul>
+      
+        <div class="dividerLine"></div>
+      
+        <!-- 承認待ち -->
+        <div id="pendingBox" style="display:none;">
+          <h3 style="margin-top:0;">参加申請（承認待ち）</h3>
+          <p class="hint">owner のみ表示されます。</p>
+          <ul id="pendingList"></ul>
+        </div>
+      
+      </div> <!-- ← ★ groupPanel をここで閉じる -->
 
-      <p class="hint">
-        ※ 参加中グループを選ぶと、以降のスコアはそのグループにも記録されます（個人記録も残ります）。
-      </p>
-
-      <div class="dividerLine"></div>
-
-      <!-- グループ作成 -->
-      <div class="row">
-        <input id="groupCreateName" type="text" placeholder="新しいグループ名（例：営業チーム）" aria-label="グループ名入力" />
-        <button id="groupCreateBtn" type="button">グループ作成</button>
-      </div>
-
-      <div class="dividerLine"></div>
-
-      <!-- グループ検索 + 参加申請 -->
-      <div class="row">
-        <input id="groupSearchInput" type="text" placeholder="グループ名で検索" aria-label="グループ検索" />
-        <button id="groupSearchBtn" type="button">検索</button>
-      </div>
-
-      <ul id="groupSearchResult" style="margin-top:10px;"></ul>
-
-      <div class="dividerLine"></div>
-
-      <!-- 承認待ち（owner のみ表示） -->
-      <div id="pendingBox" style="display:none;">
-        <h3 style="margin-top:0;">参加申請（承認待ち）</h3>
-        <p class="hint">owner のみ表示されます。</p>
-        <ul id="pendingList"></ul>
-      </div>
     </section>
 
     <section id="play" class="card" aria-label="タイピング練習" style="margin-top:16px;">
@@ -441,6 +442,7 @@
   <script type="module" src="./js/app.js"></script>
 </body>
 </html>
+
 
 
 
