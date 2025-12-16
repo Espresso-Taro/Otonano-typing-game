@@ -529,43 +529,43 @@ function isMasterOrAbove(rank) {
 const RANK_MESSAGES = {
   G: {
     title: "入門",
-    message: "焦るな。まずは打ち切れ。それが第一歩だ。"
+    message: "焦るな。まずは打ち切れ。\nそれが第一歩だ。"
   },
   F: {
     title: "修練",
-    message: "迷いが減れば速さになる。稽古は裏切らない。"
+    message: "迷いが減れば速さになる。\n稽古は裏切らない。"
   },
   E: {
     title: "初段",
-    message: "流れを切るな。呼吸で文章を運べ。"
+    message: "流れを切るな。\n呼吸で文章を運べ。"
   },
   D: {
     title: "中段",
-    message: "安定は強さ。地味こそ最強の型。"
+    message: "安定は強さ。\n地味こそ最強の型。"
   },
   C: {
     title: "上段",
-    message: "先を見ろ。勝ちは準備で決まる。"
+    message: "先を見ろ。\n勝ちは準備で決まる。"
   },
   B: {
     title: "師範代",
-    message: "速さに品が出てきた。余裕が力だ。"
+    message: "速さに品が出てきた。\n余裕が力だ。"
   },
   A: {
     title: "師範",
-    message: "難所で崩れない。それが実力の証。"
+    message: "難所で崩れない。\nそれが実力の証。"
   },
   S: {
     title: "達人",
-    message: "無駄を削れ。軽さが速さになる。"
+    message: "無駄を削れ。\n軽さが速さになる。"
   },
   SS: {
     title: "宗匠",
-    message: "型は裏切らない。数字がそれを証明する。"
+    message: "型は裏切らない。\n数字がそれを証明する。"
   },
   SSS: {
     title: "無双",
-    message: "静かに勝つ。ここが到達点だ。"
+    message: "静かに勝つ。\nここが到達点だ。"
   }
 };
 
@@ -1237,6 +1237,9 @@ async function loadMyAnalytics() {
   const stage = rankStage(rank);
   const msg = RANK_MESSAGES[stage];
 
+  const formattedMessage =
+    msg.message.replace(/\n/g, "<br>");
+
   bestByDifficulty.innerHTML = `
     <table class="powerTable">
       <tr>
@@ -1250,7 +1253,7 @@ async function loadMyAnalytics() {
       <tr>
         <td colspan="2" class="message">
           『${msg.title}』<br>
-          ${msg.message}
+          ${formattedMessage}
         </td>
       </tr>
     </table>
@@ -1968,6 +1971,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
