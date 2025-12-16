@@ -12,8 +12,8 @@ import {
   writeBatch
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-function memberIdOf(uid, userName, groupId) {
-  return `${uid}::${userName}::${groupId}`;
+function memberIdOf(personalId, groupId) {
+  return `${personalId}::${groupId}`;
 }
 
 export class GroupService {
@@ -270,3 +270,4 @@ export class GroupService {
     }
   }
 }
+
