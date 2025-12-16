@@ -205,10 +205,14 @@
     }
     /* セクション見出し（ユーザー／グループ共通） */
     .sectionTitle {
-      font-size: 1.1rem;   /* 少し大きく */
+      font-size: 0.9rem;   /* 少し大きく */
       font-weight: 700;    /* 太字 */
       color: #222;
       margin-right: 6px;
+    }
+    /* セクション見出し直下の select に共通余白 */
+    .sectionTitle + select {
+      margin-bottom: 10px;
     }
 
   </style>
@@ -447,6 +451,7 @@
   <script type="module" src="./js/app.js"></script>
 </body>
 </html>
+
 
 
 
