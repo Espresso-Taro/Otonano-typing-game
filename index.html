@@ -303,6 +303,41 @@
       text-shadow: 0 1px 0 rgba(0,0,0,.12);
     }
 
+    /* ===== 実力表（ベストスコア） ===== */
+    .powerTable {
+      border: 2px solid #000;
+      border-collapse: collapse;
+      font-size: 1rem;
+      margin-top: 8px;
+    }
+    
+    .powerTable td {
+      border: 1px solid #000;
+      padding: 6px 10px;
+      text-align: center;
+      white-space: nowrap;
+    }
+    
+    .powerTable .label {
+      background: #f5f5f5;
+      font-weight: 700;
+    }
+    
+    .powerTable .rank {
+      font-size: 1.4em;
+      font-weight: 900;
+    }
+    
+    .powerTable .score {
+      font-size: 1.2em;
+      font-weight: 800;
+    }
+    
+    .powerTable .message {
+      padding: 10px;
+      line-height: 1.4;
+    }
+
 
 
   </style>
@@ -464,8 +499,8 @@
 
         <div class="split">
           <div>
-            <h3>ベストスコア</h3>
-            <ul id="bestByDifficulty"></ul>
+            <h3>あなたの実力</h3>
+            <div id="bestByDifficulty"></div>
           </div>
 
           <div>
@@ -521,6 +556,7 @@
   <script type="module" src="./js/app.js"></script>
 </body>
 </html>
+
 
 
 
