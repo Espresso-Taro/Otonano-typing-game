@@ -215,17 +215,30 @@ userMgr.onUserChanged(async () => {
   await reloadAllRankings();
 });
 
-async function loadUserNameMap(db) {
-  const snap = await getDocs(collection(db, "userProfiles"));
+async function buildUserNameMapFromScores(db, rows) {
   const map = new Map();
-  snap.forEach(d => {
-    const data = d.data();
-    if (data.personalId && data.userName) {
-      map.set(data.personalId, data.userName);
+
+  const personalIds = [...new Set(
+    rows.map(r => r.personalId).filter(Boolean)
+  )];
+
+  for (const pid of personalIds) {
+    try {
+      const snap = await getDoc(doc(db, "userProfiles", pid));
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.userName) {
+          map.set(pid, data.userName);
+        }
+      }
+    } catch (e) {
+      // 読めないユーザーはスキップ（Rules上あり得る）
     }
-  });
+  }
+
   return map;
 }
+
 
 
 /* =========================================================
@@ -2103,6 +2116,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
