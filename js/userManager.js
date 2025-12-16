@@ -13,8 +13,16 @@ import {
 
 const MAX_USER_NAME_LENGTH = 10;
 const MAX_USERS_PER_DEVICE = 10;
+
 function countChars(str) {
-  return [...str].length; // ★ 絵文字も1文字としてカウント
+  return [...str].length; // 絵文字も1文字扱い
+}
+
+/**
+ * 全世界で衝突しないユーザー識別子
+ */
+function generatePersonalId() {
+  return crypto.randomUUID(); // UUID v4
 }
 
 export class UserManager {
@@ -28,8 +36,10 @@ export class UserManager {
     this.renameBtn = renameBtn || null;
     this.deleteBtn = deleteBtn || null;
 
+    // [{ personalId, userName }]
     this.users = [];
     this.currentUserName = "";
+    this.currentPersonalId = "";
     this._authUid = "";
     this._listeners = new Set();
 
@@ -45,19 +55,23 @@ export class UserManager {
 
     this.users = await this.listUsers();
 
-    const last = this._getLastUserName();
+    const lastPersonalId = this._getLastPersonalId();
+    const lastUser = this.users.find(u => u.personalId === lastPersonalId);
 
-    if (last && this.users.includes(last)) {
-      this.currentUserName = last;
+    if (lastUser) {
+      this.currentPersonalId = lastUser.personalId;
+      this.currentUserName = lastUser.userName;
     } else if (this.users.length > 0) {
-      this.currentUserName = this.users[0];
+      this.currentPersonalId = this.users[0].personalId;
+      this.currentUserName = this.users[0].userName;
     } else {
       const guest = await this._createUniqueGuestUser();
-      this.currentUserName = guest;
+      this.currentPersonalId = guest.personalId;
+      this.currentUserName = guest.userName;
       this.users = await this.listUsers();
     }
 
-    this._setLastUserName(this.currentUserName);
+    this._setLastPersonalId(this.currentPersonalId);
     this.render();
     this._emitChanged();
 
@@ -65,7 +79,7 @@ export class UserManager {
   }
 
   /* =========================
-     イベント
+     Events
   ========================= */
   onUserChanged(fn) {
     if (typeof fn !== "function") return () => {};
@@ -76,7 +90,7 @@ export class UserManager {
   _emitChanged() {
     for (const fn of this._listeners) {
       try {
-        fn(this.currentUserName);
+        fn(this.currentUserName, this.currentPersonalId);
       } catch (e) {
         console.error("onUserChanged handler error:", e);
       }
@@ -86,11 +100,13 @@ export class UserManager {
   _bindEvents() {
     if (this.userSelect) {
       this.userSelect.addEventListener("change", () => {
-        const v = (this.userSelect.value || "").toString();
-        if (!v || !this.users.includes(v)) return;
+        const pid = (this.userSelect.value || "").toString();
+        const u = this.users.find(x => x.personalId === pid);
+        if (!u) return;
 
-        this.currentUserName = v;
-        this._setLastUserName(v);
+        this.currentPersonalId = u.personalId;
+        this.currentUserName = u.userName;
+        this._setLastPersonalId(u.personalId);
         this._emitChanged();
       });
     }
@@ -109,11 +125,11 @@ export class UserManager {
 
     if (this.renameBtn) {
       this.renameBtn.addEventListener("click", async () => {
-        if (!this.currentUserName) return;
+        if (!this.currentPersonalId) return;
         const newName = prompt("新しいユーザー名", this.currentUserName);
         if (!newName || newName === this.currentUserName) return;
         try {
-          await this.renameUser(this.currentUserName, newName);
+          await this.renameUser(this.currentPersonalId, newName);
         } catch (e) {
           alert(e.message || "改名に失敗しました");
         }
@@ -122,10 +138,10 @@ export class UserManager {
 
     if (this.deleteBtn) {
       this.deleteBtn.addEventListener("click", async () => {
-        if (!this.currentUserName) return;
+        if (!this.currentPersonalId) return;
         if (!confirm(`ユーザー「${this.currentUserName}」を削除しますか？`)) return;
         try {
-          await this.deleteUser(this.currentUserName);
+          await this.deleteUser(this.currentPersonalId);
         } catch (e) {
           alert(e.message || "削除に失敗しました");
         }
@@ -140,15 +156,15 @@ export class UserManager {
     if (!this.userSelect) return;
 
     this.userSelect.innerHTML = "";
-    for (const name of this.users) {
+    for (const u of this.users) {
       const opt = document.createElement("option");
-      opt.value = name;
-      opt.textContent = name;
+      opt.value = u.personalId;
+      opt.textContent = u.userName;
       this.userSelect.appendChild(opt);
     }
 
-    if (this.currentUserName) {
-      this.userSelect.value = this.currentUserName;
+    if (this.currentPersonalId) {
+      this.userSelect.value = this.currentPersonalId;
     }
   }
 
@@ -156,30 +172,40 @@ export class UserManager {
     return this.currentUserName;
   }
 
+  getCurrentPersonalId() {
+    return this.currentPersonalId;
+  }
+
   /* =========================
      Firestore
   ========================= */
-
-  // ★ ここが最大の修正点
   async listUsers() {
     const q = query(
-      collection(this.db, "userUserNames"),
+      collection(this.db, "userProfiles"),
       where("uid", "==", this._authUid)
     );
+
     const snap = await getDocs(q);
-    return snap.docs.map(d => d.data().userName).sort();
+    return snap.docs
+      .map(d => {
+        const data = d.data() || {};
+        return {
+          personalId: (data.personalId || d.id || "").toString(),
+          userName: (data.userName || "").toString()
+        };
+      })
+      .filter(x => x.personalId && x.userName)
+      .sort((a, b) => a.userName.localeCompare(b.userName));
   }
 
   async addUser(nameRaw) {
-    // ★ 端末あたり最大ユーザー数
     if (this.users.length >= MAX_USERS_PER_DEVICE) {
       throw new Error("この端末では最大10名までしか登録できません");
     }
-  
+
     const name = nameRaw.trim();
     if (!name) throw new Error("ユーザー名が空です");
-  
-    // ★ 名前の長さ制限
+
     if (countChars(name) > MAX_USER_NAME_LENGTH) {
       throw new Error("ユーザー名は10文字以内で入力してください");
     }
@@ -194,36 +220,34 @@ export class UserManager {
       createdByUid: this._authUid
     });
 
-    await setDoc(
-      doc(this.db, "userUserNames", `${this._authUid}_${name}`),
-      {
-        uid: this._authUid,
-        userName: name,
-        createdAt: serverTimestamp()
-      }
-    );
+    const personalId = generatePersonalId();
+    await setDoc(doc(this.db, "userProfiles", personalId), {
+      personalId,
+      uid: this._authUid,
+      userName: name,
+      createdAt: serverTimestamp()
+    });
 
     this.users = await this.listUsers();
+    this.currentPersonalId = personalId;
     this.currentUserName = name;
-    this._setLastUserName(name);
+    this._setLastPersonalId(personalId);
     this.render();
     this._emitChanged();
   }
 
-  async renameUser(oldName, newName) {
-    if (!this.users.includes(oldName)) throw new Error("権限がありません");
-  
+  async renameUser(personalId, newName) {
+    const me = this.users.find(u => u.personalId === personalId);
+    if (!me) throw new Error("権限がありません");
+
     const name = newName.trim();
     if (!name) throw new Error("ユーザー名が空です");
-  
-    // ★ 名前の長さ制限
+
     if (countChars(name) > MAX_USER_NAME_LENGTH) {
       throw new Error("ユーザー名は10文字以内で入力してください");
     }
 
-    const oldRef = doc(this.db, "userNames", oldName);
-    const newRef = doc(this.db, "userNames", newName);
-
+    const newRef = doc(this.db, "userNames", name);
     if ((await getDoc(newRef)).exists()) {
       throw new Error("新しいユーザー名は既に使われています");
     }
@@ -232,52 +256,53 @@ export class UserManager {
       createdAt: serverTimestamp(),
       createdByUid: this._authUid
     });
-    await deleteDoc(oldRef);
 
-    await deleteDoc(doc(this.db, "userUserNames", `${this._authUid}_${oldName}`));
+    await deleteDoc(doc(this.db, "userNames", me.userName));
+
     await setDoc(
-      doc(this.db, "userUserNames", `${this._authUid}_${newName}`),
-      {
-        uid: this._authUid,
-        userName: newName,
-        createdAt: serverTimestamp()
-      }
+      doc(this.db, "userProfiles", personalId),
+      { userName: name },
+      { merge: true }
     );
 
-    this._cleanupLocalStorageForUser(oldName);
+    this._cleanupLocalStorageForUser(me.userName, personalId);
 
     this.users = await this.listUsers();
-    this.currentUserName = newName;
-    this._setLastUserName(newName);
+    this.currentPersonalId = personalId;
+    this.currentUserName = name;
+    this._setLastPersonalId(personalId);
     this.render();
     this._emitChanged();
   }
 
-  async deleteUser(name) {
-    if (!this.users.includes(name)) return;
+  async deleteUser(personalId) {
+    const me = this.users.find(u => u.personalId === personalId);
+    if (!me) return;
 
-    await deleteDoc(doc(this.db, "userNames", name));
-    await deleteDoc(doc(this.db, "userUserNames", `${this._authUid}_${name}`));
+    await deleteDoc(doc(this.db, "userNames", me.userName));
+    await deleteDoc(doc(this.db, "userProfiles", personalId));
 
-    this._cleanupLocalStorageForUser(name);
+    this._cleanupLocalStorageForUser(me.userName, personalId);
 
     this.users = await this.listUsers();
 
     if (this.users.length === 0) {
       const guest = await this._createUniqueGuestUser();
       this.users = await this.listUsers();
-      this.currentUserName = guest;
+      this.currentPersonalId = guest.personalId;
+      this.currentUserName = guest.userName;
     } else {
-      this.currentUserName = this.users[0];
+      this.currentPersonalId = this.users[0].personalId;
+      this.currentUserName = this.users[0].userName;
     }
 
-    this._setLastUserName(this.currentUserName);
+    this._setLastPersonalId(this.currentPersonalId);
     this.render();
     this._emitChanged();
   }
 
   /* =========================
-     guest 生成
+     guest
   ========================= */
   async _createUniqueGuestUser() {
     for (let i = 0; i < 30; i++) {
@@ -291,15 +316,14 @@ export class UserManager {
       });
 
       if (ok) {
-        await setDoc(
-          doc(this.db, "userUserNames", `${this._authUid}_${ok}`),
-          {
-            uid: this._authUid,
-            userName: ok,
-            createdAt: serverTimestamp()
-          }
-        );
-        return ok;
+        const personalId = generatePersonalId();
+        await setDoc(doc(this.db, "userProfiles", personalId), {
+          personalId,
+          uid: this._authUid,
+          userName: ok,
+          createdAt: serverTimestamp()
+        });
+        return { personalId, userName: ok };
       }
     }
     throw new Error("guest 作成失敗");
@@ -315,21 +339,19 @@ export class UserManager {
      localStorage
   ========================= */
   _lastKey() {
-    return `lastUserName_v1:${this._authUid}`;
+    return `lastPersonalId_v1:${this._authUid}`;
   }
 
-  _getLastUserName() {
+  _getLastPersonalId() {
     return localStorage.getItem(this._lastKey()) || "";
   }
 
-  _setLastUserName(name) {
-    localStorage.setItem(this._lastKey(), name);
+  _setLastPersonalId(personalId) {
+    localStorage.setItem(this._lastKey(), personalId);
   }
 
-  _cleanupLocalStorageForUser(userName) {
-    localStorage.removeItem(`currentGroupId_v1:${userName}`);
+  _cleanupLocalStorageForUser(userName, personalId) {
+    if (userName) localStorage.removeItem(`currentGroupId_v1:${userName}`);
+    if (personalId) localStorage.removeItem(`currentGroupId_v1:${personalId}`);
   }
 }
-
-
-
