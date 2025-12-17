@@ -1318,7 +1318,7 @@ async function loadGroupRanking() {
       difficulty: State.activeRankDiff
     });
 
-    const rows = sortAndTop10(rowsFiltered);
+    const rows = sortAndTop10(rowsRaw);
     const userNameMap = await buildUserNameMapFromScores(db, rows);
 
     rankingSvc.renderList(groupRankingUL, rows, {
@@ -2389,6 +2389,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
