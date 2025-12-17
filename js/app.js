@@ -244,7 +244,23 @@ async function buildUserNameMapFromScores(db, rows) {
   return map;
 }
 
+async function filterRowsByExistingUsers(db, rows) {
+  if (!Array.isArray(rows) || rows.length === 0) return [];
 
+  const ids = [...new Set(rows.map(r => r.personalId).filter(Boolean))];
+  const alive = new Set();
+
+  for (const pid of ids) {
+    try {
+      const snap = await getDoc(doc(db, "userProfiles", pid));
+      if (snap.exists()) alive.add(pid);
+    } catch {
+      // 読めないものは除外
+    }
+  }
+
+  return rows.filter(r => alive.has(r.personalId));
+}
 
 
 /* =========================================================
@@ -1282,6 +1298,7 @@ async function loadDailyRanking() {
       dateKey,
       difficulty: diff
     });
+    const rows = await filterRowsByExistingUsers(db, rowsRaw);
 
     const userNameMap = await buildUserNameMapFromScores(db, rows);
 
@@ -1309,6 +1326,7 @@ async function loadOverallRanking() {
     const rows = await rankingSvc.loadOverall({
       difficulty: State.activeRankDiff
     });
+    const rows = await filterRowsByExistingUsers(db, rowsRaw);
 
     const userNameMap = await buildUserNameMapFromScores(db, rows);
 
@@ -1343,6 +1361,7 @@ async function loadGroupRanking() {
       groupId: State.currentGroupId,
       difficulty: State.activeRankDiff
     });
+    const rowsFiltered = await filterRowsByExistingUsers(db, rowsRaw);
 
     const rows = sortAndTop10(rowsRaw);
     const userNameMap = await buildUserNameMapFromScores(db, rows);
@@ -2251,6 +2270,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
