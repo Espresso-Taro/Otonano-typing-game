@@ -239,6 +239,20 @@ userMgr.onUserChanged(async () => {
   await loadMyAnalytics();
 });
 
+// ★ 追加：personalId から userName を解決（1人用）
+async function resolveUserName(db, personalId) {
+  if (!personalId) return "(unknown)";
+
+  try {
+    const snap = await getDoc(doc(db, "userProfiles", personalId));
+    if (snap.exists()) {
+      return snap.data().userName || "(unknown)";
+    }
+  } catch {}
+
+  return "(unknown)";
+}
+
 async function buildUserNameMapFromScores(db, rows) {
   const map = new Map();
 
@@ -2159,6 +2173,15 @@ function bindGroupUI() {
         } else {
           btn.textContent = "参加申請";
           btn.addEventListener("click", async () => {
+            const ownerName = await resolveUserName(db, g.ownerPersonalId);
+
+            const ok = confirm(
+              `グループ「${g.name}」\n` +
+              `オーナー：${ownerName}\n\n` +
+              `参加申請しますか？`
+            );
+            if (!ok) return;
+            
             await groupSvc.requestJoin({
               groupId: g.groupId,
               personalId,
@@ -2447,6 +2470,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
