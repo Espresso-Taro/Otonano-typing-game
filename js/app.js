@@ -1392,22 +1392,22 @@ function drawScoreTrend(rows) {
   if (!scoreTrendCanvas) return;
 
   const ctx = scoreTrendCanvas.getContext("2d");
-  const w = scoreTrendCanvas.width = scoreTrendCanvas.clientWidth;
-  const h = scoreTrendCanvas.height = scoreTrendCanvas.clientHeight;
+  const w = scoreTrendCanvas.width = scoreTrendCanvas.clientWidth || 300;
+  const h = scoreTrendCanvas.height = scoreTrendCanvas.clientHeight || 150;
 
   ctx.clearRect(0, 0, w, h);
 
-  if (!rows || rows.length === 0) {
+  const data = rows
+    .filter(r => !isNaN(Number(r.cpm)))
+    .map(r => ({ ...r, cpm: Number(r.cpm) }))
+    .sort((a, b) => a.dateKey.localeCompare(b.dateKey));
+
+  if (data.length === 0) {
     ctx.fillStyle = "#999";
     ctx.font = "14px sans-serif";
     ctx.fillText("まだ記録がありません。", 10, 30);
     return;
   }
-
-  // 日付昇順
-  const data = rows
-    .filter(r => typeof r.cpm === "number")
-    .sort((a, b) => a.dateKey.localeCompare(b.dateKey));
 
   const cpms = data.map(r => r.cpm);
   const min = Math.min(...cpms);
@@ -1424,7 +1424,6 @@ function drawScoreTrend(rows) {
   const yAt = v =>
     gy1 - (gy1 - gy0) * ((v - min) / Math.max(max - min, 1));
 
-  // 軸
   ctx.strokeStyle = "#ccc";
   ctx.beginPath();
   ctx.moveTo(gx0, gy0);
@@ -1432,7 +1431,6 @@ function drawScoreTrend(rows) {
   ctx.lineTo(gx1, gy1);
   ctx.stroke();
 
-  // 折れ線
   ctx.strokeStyle = "#0b5ed7";
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -1444,16 +1442,14 @@ function drawScoreTrend(rows) {
   });
   ctx.stroke();
 
-  // 点
   ctx.fillStyle = "#0b5ed7";
   data.forEach((r, i) => {
-    const x = xAt(i);
-    const y = yAt(r.cpm);
     ctx.beginPath();
-    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.arc(xAt(i), yAt(r.cpm), 3, 0, Math.PI * 2);
     ctx.fill();
   });
 }
+
 
 
 async function loadMyAnalytics() {
@@ -2270,6 +2266,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
