@@ -149,7 +149,8 @@ const userMgr = new UserManager({
   addBtn: addUserBtn,
   renameBtn: renameUserBtn,
   deleteBtn: deleteUserBtn,
-  db
+  db,
+  groupSvc   // ★ これを追加
 });
 
 const rankingSvc = new RankingService({ db });
@@ -2395,6 +2396,7 @@ onAuthStateChanged(auth, async (user) => {
 window.addEventListener("load", () => {
   document.body.classList.remove("preload");
 });
+
 
 
 
