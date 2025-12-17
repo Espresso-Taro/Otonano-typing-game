@@ -423,12 +423,26 @@
       caret-color: transparent; /* カーソル非表示（任意） */
     }
 
+    /* ===== 初期ロード時のガタつき防止 ===== */
+    body.preload {
+      visibility: hidden;
+    }
+    
+    /* ヘッダーの高さを初期から固定（CLS防止） */
+    header {
+      min-height: 180px; /* 必要なら後で微調整 */
+    }
+    
+    /* 上段カードの高さも安定させる */
+    .headerCard {
+      min-height: 88px;
+    }
 
 
   </style>
 </head>
 
-<body>
+<body class="preload">
   <header>
     <h1>漢字変換対応 日本語タイピング練習</h1>
     <p class="lead">
@@ -649,6 +663,7 @@
   <script type="module" src="./js/app.js"></script>
 </body>
 </html>
+
 
 
 
