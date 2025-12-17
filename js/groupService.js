@@ -330,45 +330,8 @@ export class GroupService {
   
     await batch.commit();
   }
-
-  /* =========================
-   userName を全関連コレクションで更新
-  ========================= */
-  async updateUserNameEverywhere({ personalId, newUserName }) {
-    if (!personalId || !newUserName) return;
-  
-    const batch = writeBatch(this.db);
-  
-    // 1. groupMembers
-    {
-      const q = query(
-        collection(this.db, "groupMembers"),
-        where("personalId", "==", personalId)
-      );
-      const snap = await getDocs(q);
-      for (const d of snap.docs) {
-        batch.update(d.ref, { userName: newUserName });
-      }
-    }
-  
-    // 2. groupJoinRequests
-    {
-      const q = query(
-        collection(this.db, "groupJoinRequests"),
-        where("personalId", "==", personalId)
-      );
-      const snap = await getDocs(q);
-      for (const d of snap.docs) {
-        batch.update(d.ref, { userName: newUserName });
-      }
-    }
-  
-    await batch.commit();
-  }
-
-
-
 }
+
 
 
 
