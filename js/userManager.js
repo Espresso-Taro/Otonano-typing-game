@@ -277,6 +277,14 @@ export class UserManager {
       { merge: true }
     );
 
+     // ★ owner のグループの ownerUserName も更新
+     if (this.groupSvc) {
+       await this.groupSvc.updateOwnerUserName({
+         ownerPersonalId: personalId,
+         newUserName: name
+       });
+     }
+
     this._cleanupLocalStorageForUser(me.userName, personalId);
 
     this.users = await this.listUsers();
@@ -374,6 +382,7 @@ export class UserManager {
     if (personalId) localStorage.removeItem(`currentGroupId_v1:${personalId}`);
   }
 }
+
 
 
 
