@@ -2130,8 +2130,9 @@ function bindGroupUI() {
           try {
             await groupSvc.requestJoin({
               groupId: g.groupId,
+              personalId: userMgr.getCurrentPersonalId(),
               uid: State.authUser.uid,
-              userName: userMgr.getCurrentPersonalId(),
+              userName: userMgr.getCurrentUserName(),
               targetOwnerUserName: g.ownerUserName   // ★追加
             });
             alert("参加申請を送信しました。");
@@ -2176,8 +2177,7 @@ function bindGroupUI() {
     try {
       await groupSvc.leaveGroup({
         groupId: State.currentGroupId,
-        uid: State.authUser.uid,
-        userName: userMgr.getCurrentPersonalId()
+        personalId: userMgr.getCurrentPersonalId()
       });
   
       await refreshMyGroups();
@@ -2402,6 +2402,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
