@@ -26,7 +26,7 @@ function generatePersonalId() {
 }
 
 export class UserManager {
-  constructor({ selectEl, addBtn, renameBtn, deleteBtn, db, groupSvc }) {
+  constructor({ selectEl, addBtn, renameBtn, deleteBtn, db }) {
     if (!db) throw new Error("UserManager: Firestore db is required");
 
     this.db = db;
@@ -42,8 +42,6 @@ export class UserManager {
     this.currentPersonalId = "";
     this._authUid = "";
     this._listeners = new Set();
-
-    this.groupSvc = groupSvc || null;
 
     this._bindEvents();
   }
@@ -374,6 +372,7 @@ export class UserManager {
     if (personalId) localStorage.removeItem(`currentGroupId_v1:${personalId}`);
   }
 }
+
 
 
 
