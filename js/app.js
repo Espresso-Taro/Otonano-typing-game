@@ -152,8 +152,7 @@ const userMgr = new UserManager({
   addBtn: addUserBtn,
   renameBtn: renameUserBtn,
   deleteBtn: deleteUserBtn,
-  db,
-  groupSvc   // ★ これを追加
+  db
 });
 
 
@@ -2398,6 +2397,7 @@ onAuthStateChanged(auth, async (user) => {
 window.addEventListener("load", () => {
   document.body.classList.remove("preload");
 });
+
 
 
 
