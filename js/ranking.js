@@ -6,6 +6,7 @@ import {
   where,
   limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { rankByCPM } from "./rankUtil.js";
 
 export class RankingService {
   constructor({ db }) {
@@ -84,8 +85,11 @@ export class RankingService {
         "(unknown)";
 
       const cpm = Number(r.cpm ?? 0);
+      const rank = rankByCPM(cpm, r.difficulty);
+      
+      li.textContent =
+        `${idx + 1}位  ${name}  ${cpm.toFixed(0)} CPM  [${rank}]`;
 
-      li.textContent = `${idx + 1}位  ${name}  ${cpm.toFixed(0)} CPM`;
 
       // 自分をハイライト（personalId 基準）
       if (
@@ -121,3 +125,4 @@ export class RankingService {
     );
   }
 }
+
