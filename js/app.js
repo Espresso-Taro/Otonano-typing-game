@@ -267,6 +267,28 @@ async function filterRowsByExistingUsers(db, rows) {
 
 let isBooting = true; // ★起動中は true
 
+// =========================================================
+// スクロールバー幅を測定して CSS 変数 --sbw に入れる
+// =========================================================
+(function setScrollbarWidthVar() {
+  const div = document.createElement("div");
+  div.style.cssText = `
+    position:absolute;
+    left:-9999px;
+    top:-9999px;
+    width:100px;
+    height:100px;
+    overflow:scroll;
+  `;
+  document.body.appendChild(div);
+
+  const sbw = div.offsetWidth - div.clientWidth;
+  div.remove();
+
+  document.documentElement.style.setProperty("--sbw", sbw + "px");
+})();
+
+
 
 /* =========================================================
    State
@@ -2405,6 +2427,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
