@@ -1847,7 +1847,11 @@ function bindTypingButtons() {
 
   const startSequence = async () => {
     if (!inputEl || !canStartNow()) return;
-
+    
+    // ★② iPhone対策：ユーザー操作中に focus してキーボードを出す
+    inputEl.disabled = false;
+    inputEl.focus({ preventScroll: true });
+    
     // ★ スタート押下時に見本文を画面上へ
     scrollTextToTopOnMobile();
 
@@ -2444,6 +2448,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
