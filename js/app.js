@@ -1860,18 +1860,25 @@ function bindTypingButtons() {
   });
 
   on(skipBtn, "click", () => {
-    // 既存処理そのまま
+    // 今日の課題がONなら、「普段OFFにした時」と同じ経路でOFFにする（復元も含む）
     if (dailyTaskEl && dailyTaskEl.checked) {
       dailyTaskEl.checked = false;
-      disableDailyTask();
+  
+      // ★ここが重要：changeハンドラを通して beforeDailyPrefs の復元を必ず走らせる
+      dailyTaskEl.dispatchEvent(new Event("change"));
+  
+      // change側で buildPool / setCurrentItem / updateMetaInfo / persistPrefsNow 等まで完了するので二重実行しない
+      return;
     }
-
+  
+    // 通常の「別の文章にする」
     buildPool();
     if (!State.hasNoItem) {
       setCurrentItem(pickRandomDifferentText(), { daily: false });
     }
     updateMetaInfo();
   });
+
 }
 
 function syncRankDifficultyFromPractice(diff) {
@@ -2394,6 +2401,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
