@@ -2079,13 +2079,13 @@ function bindGroupUI() {
   
     try {
       const ownerUid = State.authUser.uid;
-      const ownerUserName = userMgr.getCurrentPersonalId();
+      const ownerUserName = userMgr.getCurrentUserName();
   
       const created = await groupSvc.createGroup({
         groupName,
         ownerPersonalId: userMgr.getCurrentPersonalId(),
         ownerUid: auth.currentUser.uid,
-        ownerUserName: userMgr.getCurrentPersonalId()
+        ownerUserName: userMgr.getCurrentUserName()
       });
   
       groupCreateName.value = "";
@@ -2267,7 +2267,7 @@ function onTypingFinish({ metrics, meta }) {
 
     const user = State.authUser;
     const uid = user?.uid;
-    const userName = userMgr.getCurrentPersonalId?.() ?? "Guest";
+    const userName   = userMgr.getCurrentUserName?.() ?? "Guest";
     const dateKey = todayKey();
     const dailyTaskKey = meta?.dailyTaskKey ?? (isDailyTask ? State.daily.dailyTaskKey : null);
     const dailyTaskName = isDailyTask ? (theme !== "all" ? theme : (category !== "all" ? category : "今日の課題")) : null;
@@ -2402,6 +2402,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
