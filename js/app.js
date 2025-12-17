@@ -1293,7 +1293,7 @@ async function loadDailyRanking() {
   hide(dailyRankLabel);
 
   try {
-    const rows = await rankingSvc.loadDailyTask({
+    const rowsRaw = await rankingSvc.loadDailyTask({
       dailyTaskKey,
       dateKey,
       difficulty: diff
@@ -1323,7 +1323,7 @@ async function loadOverallRanking() {
   hide(overallLabel);
 
   try {
-    const rows = await rankingSvc.loadOverall({
+    const rowsRaw = await rankingSvc.loadOverall({
       difficulty: State.activeRankDiff
     });
     const rows = await filterRowsByExistingUsers(db, rowsRaw);
@@ -1363,7 +1363,7 @@ async function loadGroupRanking() {
     });
     const rowsFiltered = await filterRowsByExistingUsers(db, rowsRaw);
 
-    const rows = sortAndTop10(rowsRaw);
+    const rows = sortAndTop10(rowsFiltered);
     const userNameMap = await buildUserNameMapFromScores(db, rows);
 
     rankingSvc.renderList(groupRankingUL, rows, {
@@ -2270,6 +2270,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
