@@ -1299,7 +1299,7 @@ async function loadDailyRanking() {
       dateKey,
       difficulty: diff
     });
-    const rows = await filterRowsByExistingUsers(db, rowsRaw);
+    const rows = rowsRaw;
 
     const userNameMap = await buildUserNameMapFromScores(db, rows);
 
@@ -1327,7 +1327,7 @@ async function loadOverallRanking() {
     const rowsRaw = await rankingSvc.loadOverall({
       difficulty: State.activeRankDiff
     });
-    const rows = await filterRowsByExistingUsers(db, rowsRaw);
+    const rows = rowsRaw;
 
     const userNameMap = await buildUserNameMapFromScores(db, rows);
 
@@ -1362,7 +1362,6 @@ async function loadGroupRanking() {
       groupId: State.currentGroupId,
       difficulty: State.activeRankDiff
     });
-    const rowsFiltered = await filterRowsByExistingUsers(db, rowsRaw);
 
     const rows = sortAndTop10(rowsFiltered);
     const userNameMap = await buildUserNameMapFromScores(db, rows);
@@ -2435,6 +2434,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
