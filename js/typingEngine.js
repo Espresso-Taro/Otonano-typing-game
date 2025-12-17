@@ -314,7 +314,7 @@ export class TypingEngine {
     const cs = getComputedStyle(el);
     const fontSize = parseFloat(cs.fontSize) || 0;
     const h = el.clientHeight;
-    const OFFSET_UP = 10; // 好みで調整（px）
+    const OFFSET_UP = 13; // 好みで調整（px）
     const padTop = Math.max(0, Math.floor((h - fontSize) / 2) - OFFSET_UP);
 
     el.style.paddingTop = `${padTop}px`;
@@ -325,6 +325,7 @@ export class TypingEngine {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+
 
 
 
