@@ -1534,23 +1534,39 @@ function drawScoreTrend(rows) {
     ctx.fillText("★", x, y);
   }
 
-  /* ===== ベスト点ラベル ===== */
+  /* ===== ベスト点ラベル（はみ出し防止） ===== */
   {
     const r = data[bestIndex];
     const x = xAt(bestIndex);
     const y = yAt(r.cpm);
-
+  
     const label = `BEST: ${Math.round(r.cpm)} CPM`;
     ctx.font = "12px sans-serif";
     const tw = ctx.measureText(label).width;
-
+  
+    const margin = 6;
+  
+    // 右に出すと見切れるか？
+    const drawRight = (x + tw + margin * 2) < w;
+  
+    const boxX = drawRight
+      ? x + margin
+      : x - tw - margin;
+  
+    const textX = drawRight
+      ? boxX + 3
+      : boxX + 3;
+  
+    // 背景
     ctx.fillStyle = "#fff";
-    ctx.fillRect(x + 6, y - 10, tw + 6, 16);
-
+    ctx.fillRect(boxX, y - 10, tw + 6, 16);
+  
+    // テキスト
     ctx.fillStyle = "#000";
     ctx.textAlign = "left";
-    ctx.fillText(label, x + 9, y + 2);
+    ctx.fillText(label, textX, y + 2);
   }
+
 
   /* ===== Y軸ラベル ===== */
   ctx.fillStyle = "#000";
@@ -2379,6 +2395,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
