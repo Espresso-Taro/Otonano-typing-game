@@ -1642,7 +1642,7 @@ async function refreshMyGroups() {
   if (!currentGroupSelect) return;
 
   const uid = State.authUser.uid;
-  const userName = userMgr.getCurrentPersonalId();
+  const personalId = userMgr.getCurrentPersonalId();
 
   let groups = [];
   try {
@@ -1670,8 +1670,7 @@ async function refreshMyGroups() {
     currentGroupSelect.appendChild(opt);
   }
 
-  // ★ 保存・復元は「userName単位」でOK
-  const saved = getSavedGroupIdFor(userName);
+  const saved = getSavedGroupIdFor(personalId);
   const optionValues = Array.from(currentGroupSelect.options).map(o => o.value);
 
   let nextGroupId = null;
@@ -1684,7 +1683,7 @@ async function refreshMyGroups() {
   currentGroupSelect.value = nextGroupId || "";
   State.currentGroupId = nextGroupId;
 
-  setSavedGroupIdFor(userName, nextGroupId);
+  setSavedGroupIdFor(personalId, nextGroupId);
 
   await onGroupChanged();
   
@@ -1732,7 +1731,7 @@ async function loadPendingRequests() {
     // ★★★ ここが重要：同一人物をまとめる ★★★
     const map = new Map(); // key = uid::userName
     for (const r of reqs) {
-      const key = `${r.uid}::${r.userName}`;
+      const key = r.personalId;
       if (!map.has(key)) {
         map.set(key, r);
       }
@@ -2426,6 +2425,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
