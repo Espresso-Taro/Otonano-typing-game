@@ -70,9 +70,17 @@
     /*.ok { color: #0b5ed7; font-weight: 700; }*/
     /*.ng { color: #c00000; font-weight: 700; }*/
 
-    .ok,
+    .ok {
+      color: #0b5ed7;              /* 青 */
+      font-weight: 400;            /* 固定 */
+      text-shadow:
+        0.4px 0 0 currentColor,
+       -0.4px 0 0 currentColor;
+    }
+    
     .ng {
-      font-weight: 400;               /* 固定 */
+      color: #c00000;              /* 赤 */
+      font-weight: 400;            /* 固定 */
       text-shadow:
         0.4px 0 0 currentColor,
        -0.4px 0 0 currentColor;
@@ -683,6 +691,7 @@
   <script type="module" src="./js/app.js"></script>
 </body>
 </html>
+
 
 
 
