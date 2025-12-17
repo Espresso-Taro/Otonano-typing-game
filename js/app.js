@@ -144,6 +144,9 @@ const pendingList = $("pendingList");
 /* =========================================================
    Services
 ========================================================= */
+const rankingSvc = new RankingService({ db });
+const groupSvc = new GroupService(db);
+
 const userMgr = new UserManager({
   selectEl: userSelect,
   addBtn: addUserBtn,
@@ -153,8 +156,7 @@ const userMgr = new UserManager({
   groupSvc   // ★ これを追加
 });
 
-const rankingSvc = new RankingService({ db });
-const groupSvc = new GroupService(db);
+
 
 async function submitScoreDoc({
   personalId,
@@ -2396,6 +2398,7 @@ onAuthStateChanged(auth, async (user) => {
 window.addEventListener("load", () => {
   document.body.classList.remove("preload");
 });
+
 
 
 
