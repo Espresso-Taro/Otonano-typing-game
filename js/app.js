@@ -141,9 +141,27 @@ const deleteGroupBtn = $("deleteGroupBtn");
 const pendingBox = $("pendingBox");
 const pendingList = $("pendingList");
 
+
 /* =========================================================
    Services
 ========================================================= */
+// ===== スマホ入力時：見本文を画面上へスクロール =====
+function scrollTextToTopOnMobile() {
+  if (!textEl) return;
+
+  // スマホ判定（iOS / Android）
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if (!isMobile) return;
+
+  // 少し遅らせて（キーボード表示後に）スクロール
+  setTimeout(() => {
+    textEl.scrollIntoView({
+      block: "start",
+      behavior: "smooth"
+    });
+  }, 50);
+}
+
 const rankingSvc = new RankingService({ db });
 const groupSvc = new GroupService(db);
 
@@ -1096,6 +1114,11 @@ function setCurrentItem(item, { daily = false } = {}) {
 
   if (inputEl) {
     inputEl.disabled = true; // Start押すまで無効
+    // フォーカス時（タップで入力開始）
+    inputEl.addEventListener("focus", scrollTextToTopOnMobile);
+  
+    // IME 変換開始時（日本語入力）
+    inputEl.addEventListener("compositionstart", scrollTextToTopOnMobile);
   }
 
   if (startBtn) {
@@ -2427,6 +2450,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
