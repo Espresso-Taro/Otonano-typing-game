@@ -1693,6 +1693,20 @@ async function refreshMyGroups() {
   }
 }
 
+async function updateCurrentGroupRoleUI() {
+  if (!currentGroupSelect) return;
+
+  const options = Array.from(currentGroupSelect.options);
+  for (const opt of options) {
+    if (opt.value === State.currentGroupId) {
+      // owner 自身の role は変わらないが
+      // UI 再評価を走らせる
+      opt.dataset.role = State.currentGroupRole;
+    }
+  }
+
+  await onGroupChanged(); // ← ここが重要
+}
 
 async function loadPendingRequests() {
   if (!pendingList) return;
@@ -1745,6 +1759,7 @@ async function loadPendingRequests() {
           ownerUid: State.authUser.uid,
           ownerUserName: userMgr.getCurrentUserName()
         });
+        await updateCurrentGroupRoleUI();
         await loadPendingRequests();
       });
 
@@ -2402,6 +2417,7 @@ onAuthStateChanged(auth, async (user) => {
     console.error("initApp error:", e);
   }
 });
+
 
 
 
