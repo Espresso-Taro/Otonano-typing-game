@@ -1642,7 +1642,6 @@ async function refreshMyGroups() {
   await onGroupChanged();
   
   if (State.currentGroupId && State.currentGroupRole === "owner") {
-    await loadPendingRequests();
   }
 }
 
@@ -1713,12 +1712,11 @@ async function loadPendingRequests() {
           ownerUserName: userMgr.getCurrentUserName()
         });
         await updateCurrentGroupRoleUI();
-        await loadPendingRequests();
       });
 
       ng.addEventListener("click", async () => {
         await groupSvc.rejectMember({ requestId: r.id });
-        await loadPendingRequests();
+        await onGroupChanged();
       });
 
       li.appendChild(nameSpan);
@@ -1753,6 +1751,7 @@ async function onGroupChanged() {
     pendingBox.style.display = (State.currentGroupId && State.currentGroupRole === "owner") ? "block" : "none";
   }
   if (State.currentGroupId && State.currentGroupRole === "owner") {
+    await loadPendingRequests();   // ★ ここに集約
   } else if (pendingList) {
     pendingList.innerHTML = "";
     const li = document.createElement("li");
@@ -2396,6 +2395,7 @@ onAuthStateChanged(auth, async (user) => {
 window.addEventListener("load", () => {
   document.body.classList.remove("preload");
 });
+
 
 
 
