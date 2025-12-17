@@ -265,6 +265,19 @@ export class GroupService {
     }
   }
 
+  async isAlreadyMember({ groupId, personalId }) {
+    if (!groupId || !personalId) return false;
+  
+    const ref = doc(
+      this.db,
+      "groupMembers",
+      `${personalId}::${groupId}`
+    );
+    const snap = await getDoc(ref);
+    return snap.exists();
+  }
+
+
   async _batchDeleteDocs(refs) {
     const chunkSize = 450;
     for (let i = 0; i < refs.length; i += chunkSize) {
@@ -276,5 +289,6 @@ export class GroupService {
     }
   }
 }
+
 
 
