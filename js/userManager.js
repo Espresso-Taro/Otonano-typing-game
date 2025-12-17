@@ -289,26 +289,34 @@ export class UserManager {
     const me = this.users.find(u => u.personalId === personalId);
     if (!me) return;
   
-    // userName の一意制約だけ解除
+    // 1. userName の一意制約を解除
     await deleteDoc(doc(this.db, "userNames", me.userName));
   
-    // ★ userProfiles は削除しない（仕様）
-    // await deleteDoc(doc(this.db, "userProfiles", personalId)); ← 削除
+    // 2. ★ 完全削除：userProfiles を Firestore から削除
+    await deleteDoc(doc(this.db, "userProfiles", personalId));
   
+    // 3. localStorage 掃除
     this._cleanupLocalStorageForUser(me.userName, personalId);
   
-    // Firestore 再取得は不要。ローカルで除外する
+    // 4. ローカル配列からも除去
     this.users = this.users.filter(u => u.personalId !== personalId);
   
-    // 削除後：常に既存ユーザーの先頭を current にする
-    this.currentPersonalId = this.users[0].personalId;
-    this.currentUserName = this.users[0].userName;
-    
-    this._setLastPersonalId(this.currentPersonalId);
+    // 5. current を安全に再設定
+    if (this.users.length > 0) {
+      this.currentPersonalId = this.users[0].personalId;
+      this.currentUserName = this.users[0].userName;
+      this._setLastPersonalId(this.currentPersonalId);
+    } else {
+      // 理論上は delete ボタン側で防がれているが、保険
+      this.currentPersonalId = "";
+      this.currentUserName = "";
+      localStorage.removeItem(this._lastKey());
+    }
+  
     this.render();
     this._emitChanged();
-
   }
+
 
   /* =========================
      guest
@@ -364,6 +372,7 @@ export class UserManager {
     if (personalId) localStorage.removeItem(`currentGroupId_v1:${personalId}`);
   }
 }
+
 
 
 
