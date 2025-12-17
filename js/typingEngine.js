@@ -99,25 +99,26 @@ export class TypingEngine {
      カウントダウン表示
   ========================= */
   async showCountdownInTextarea(sec = 3) {
-    if (!this.inputEl) return;
-
     const el = this.inputEl;
     this._ensureBasePadding();
-
+  
     el.disabled = true;
     el.classList.remove("input-guide");
     el.classList.add("countdown");
-
+  
+    // ★ 最初に1回だけ中央計算
+    this._applyVerticalCenterPadding();
+  
     for (let i = Number(sec) || 3; i > 0; i--) {
       el.value = String(i);
-      this._applyVerticalCenterPadding();
       await this._sleep(1000);
     }
-
+  
     el.value = "";
     el.classList.remove("countdown");
     this._restoreBasePadding();
   }
+
 
   /* =========================
      開始
@@ -323,6 +324,7 @@ export class TypingEngine {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+
 
 
 
