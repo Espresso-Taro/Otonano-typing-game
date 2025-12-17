@@ -81,7 +81,6 @@ export class RankingService {
       // 表示名の決定（最新 userName を最優先）
       const name =
         (userNameMap && r.personalId && userNameMap.get(r.personalId)) ||
-        (r.userName || "").toString() ||
         "(unknown)";
 
       const cpm = Number(r.cpm ?? 0);
@@ -125,4 +124,5 @@ export class RankingService {
     );
   }
 }
+
 
