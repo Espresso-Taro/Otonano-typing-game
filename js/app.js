@@ -2390,6 +2390,14 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
+/* =========================================================
+   初期描画完了後に表示（ガタつき防止）
+========================================================= */
+window.addEventListener("load", () => {
+  document.body.classList.remove("preload");
+});
+
+
 
 
 
