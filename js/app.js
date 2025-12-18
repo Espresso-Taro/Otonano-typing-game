@@ -162,6 +162,32 @@ function scrollTextToTopOnMobile() {
   }, 50);
 }
 
+function resetTypingUI() {
+  if (!inputEl) return;
+
+  // textarea を完全初期化
+  inputEl.value = "";
+  inputEl.readOnly = false;
+  inputEl.disabled = false;
+
+  // ガイド用クラス解除
+  inputEl.classList.remove("input-guide-before");
+  inputEl.classList.remove("input-guide-after");
+
+  // 見た目リセット
+  inputEl.style.textAlign = "";
+  inputEl.style.color = "";
+
+  // 状態フラグ
+  isCountingDown = false;
+
+  // TypingEngine 側リセット（あれば）
+  if (engine && typeof engine.reset === "function") {
+    engine.reset();
+  }
+}
+
+
 async function startTypingByUserAction() {
   // ★ 再入防止（最重要）
   if (isCountingDown || engine.started || engine.ended) return;
@@ -1155,12 +1181,14 @@ function pickRandomDifferentText() {
 }
 
 function setCurrentItem(item, { daily = false } = {}) {
+  // ★ 文章切り替え前に必ずリセット
+  resetTypingUI();
+
   State.currentItem = item;
 
   const text = item?.text ?? "";
   if (textEl) textEl.textContent = text;
 
-  // TypingEngine target
   engine.setTarget(text, {
     daily,
     dateKey: todayKey(),
@@ -1173,8 +1201,8 @@ function setCurrentItem(item, { daily = false } = {}) {
   });
 
   engine.enableReadyState();
-
 }
+
 
 /* =========================================================
    meta display
@@ -2547,6 +2575,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
