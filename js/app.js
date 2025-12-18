@@ -2396,6 +2396,7 @@ engine.attach();
   bindTypingButtons();
   bindPracticeFilters();
   bindRankDiffTabs();
+  bindTextareaStart(); 
   bindGroupUI();
   bindUserSwitchHooks();
   bindToggle("toggleUserPanel", "userPanel");
@@ -2452,6 +2453,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
