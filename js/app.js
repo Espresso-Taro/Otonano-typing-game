@@ -2519,13 +2519,25 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) return;
 
   try {
-    // ★ auth.uid が確定してから init（端末ごとの last userName 復元 or guest 新規作成）
+    // auth.uid が確定してから userMgr 初期化
     await userMgr.init(user.uid);
+
+    // ★ 起動完了を明示
+    isBooting = false;
+
+    // ★ personalId 確定後に必ず1回実行
+    await refreshMyGroups();
+    await reloadAllRankings();
+    await loadMyAnalytics();
+
+    // 既存の初期化（UI構築など）
     await initApp();
+
   } catch (e) {
     console.error("initApp error:", e);
   }
 });
+
 
 /* =========================================================
    初期描画完了後に表示（ガタつき防止）
@@ -2533,6 +2545,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
