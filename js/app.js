@@ -418,6 +418,7 @@ const State = {
   // グループ
   currentGroupId: "",
   currentGroupRole: null
+  _lastPendingRenderKey: null,
 };
 
 const GROUP_STORAGE_KEY = "currentGroupId_v1";
@@ -1758,9 +1759,17 @@ async function refreshMyGroups() {
 
   await onGroupChanged();
 }
-
 async function loadPendingRequests() {
   if (!pendingList) return;
+
+  const renderKey = `${State.currentGroupId}::${State.currentGroupRole}`;
+
+  // ★ 同一状態での再描画を完全に防止
+  if (State._lastPendingRenderKey === renderKey) {
+    return;
+  }
+  State._lastPendingRenderKey = renderKey;
+
   pendingList.innerHTML = "";
 
   if (!State.currentGroupId || State.currentGroupRole !== "owner") {
@@ -1770,55 +1779,59 @@ async function loadPendingRequests() {
     return;
   }
 
+  let reqs;
   try {
-    const reqs = await groupSvc.getPendingRequests(State.currentGroupId);
-
-    if (!reqs || reqs.length === 0) {
-      const li = document.createElement("li");
-      li.textContent = "承認待ちはありません。";
-      pendingList.appendChild(li);
-      return;
-    }
-
-    for (const r of reqs) {
-      const li = document.createElement("li");
-      li.style.display = "flex";
-      li.style.gap = "8px";
-      li.style.alignItems = "center";
-    
-      const nameSpan = document.createElement("span");
-      nameSpan.textContent = await resolveUserName(db, r.personalId);
-    
-      const ok = document.createElement("button");
-      ok.textContent = "承認";
-    
-      const ng = document.createElement("button");
-      ng.textContent = "却下";
-    
-      ok.onclick = async () => {
-        await groupSvc.approveMember({
-          requestId: r.id,
-          ownerUid: State.authUser.uid
-        });
-        await onGroupChanged();   // ★ 必須
-      };
-    
-      ng.onclick = async () => {
-        await groupSvc.rejectMember({ requestId: r.id });
-        await onGroupChanged();   // ★ 必須
-      };
-    
-      li.append(nameSpan, ok, ng);
-      pendingList.appendChild(li);
-    }
-
+    reqs = await groupSvc.getPendingRequests(State.currentGroupId);
   } catch (e) {
     console.error("loadPendingRequests failed:", e);
     const li = document.createElement("li");
     li.textContent = "承認待ち一覧の取得に失敗しました。";
     pendingList.appendChild(li);
+    return;
+  }
+
+  if (!reqs || reqs.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = "承認待ちはありません。";
+    pendingList.appendChild(li);
+    return;
+  }
+
+  for (const r of reqs) {
+    const li = document.createElement("li");
+    li.style.display = "flex";
+    li.style.gap = "8px";
+    li.style.alignItems = "center";
+
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = await resolveUserName(db, r.personalId);
+
+    const ok = document.createElement("button");
+    ok.textContent = "承認";
+
+    const ng = document.createElement("button");
+    ng.textContent = "却下";
+
+    ok.onclick = async () => {
+      State._lastPendingRenderKey = null; // ★ 状態が変わるので解除
+      await groupSvc.approveMember({
+        requestId: r.id,
+        ownerUid: State.authUser.uid
+      });
+      await onGroupChanged();
+    };
+
+    ng.onclick = async () => {
+      State._lastPendingRenderKey = null; // ★ 状態が変わるので解除
+      await groupSvc.rejectMember({ requestId: r.id });
+      await onGroupChanged();
+    };
+
+    li.append(nameSpan, ok, ng);
+    pendingList.appendChild(li);
   }
 }
+
 
 async function resolveCurrentGroupRole() {
   if (!State.currentGroupId) return null;
@@ -2552,6 +2565,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
