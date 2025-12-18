@@ -249,6 +249,10 @@ async function startTypingByUserAction() {
 
   isCountingDown = true;
 
+  // ★ カウントダウン中は入力禁止
+  inputEl.readOnly = true;
+  inputEl.disabled = false; // キーボードは出す
+
   // 先にフォーカス（キーボードを出す）
   inputEl.readOnly = false;
   inputEl.disabled = false;
@@ -265,6 +269,10 @@ async function startTypingByUserAction() {
 
   // ★ カウントダウン終了＝時間計測開始
   engine.startTimerOnly();
+
+  // ★ 入力解禁
+  inputEl.readOnly = false;
+  isCountingDown = false;
 
   // ★ カウントダウン後ガイド
   inputEl.readOnly = false;
@@ -2683,6 +2691,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
