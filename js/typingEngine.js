@@ -131,10 +131,9 @@ export class TypingEngine {
   startNow() {
     if (!this.inputEl) return;
   
-    this.started = true;
+    // ★ 時間は startTimerOnly() で開始済み前提
+    // started / startTimeMs / keystrokes は触らない
     this.ended = false;
-    this.startTimeMs = Date.now();
-    this.keystrokes = 0;
   
     this.isComposing = false;
     this.lastCommittedValue = "";
@@ -142,14 +141,15 @@ export class TypingEngine {
     // ガイド・カウントダウン系クラスを外す
     this.inputEl.classList.remove("countdown", "input-guide");
     this._restoreBasePadding();
-
-    // ★ placeholder ガイドを消す
+  
+    // placeholder ガイドを消す
     this._clearGuidePlaceholder();
   
-    // ★ ここでは value を触らない
+    // value は触らない
     this.inputEl.disabled = false;
     this.inputEl.focus();
   }
+
 
     /* =========================
      ★ 時間計測のみ開始（カウントダウン後）
@@ -373,6 +373,7 @@ export class TypingEngine {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+
 
 
 
