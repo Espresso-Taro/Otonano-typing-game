@@ -444,58 +444,77 @@
       color: #000;
     }
     
+    /* typingArea を基準にする */
+    .typingArea {
+      position: relative;   /* ★ 追加 */
+    }
+    
+    /* カウントダウンを textarea の中央に重ねる */
     #countdownOverlay {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 64px;
-    color: #000;
-    text-shadow: 0 2px 6px rgba(255,255,255,0.8);
-    background: transparent;   /* ★ 完全透明 */
-    z-index: 9999;
-  }
-
-  #countdownOverlay {
-    pointer-events: auto;
-  }
+      position: absolute;   /* ★ fixed → absolute */
+      inset: 0;
+    
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    
+      font-size: 64px;
+      font-weight: 700;
+      color: #000;
+      background: transparent;
+      z-index: 10;          /* textarea より上 */
+      pointer-events: none; /* 入力を邪魔しない */
+    }
+    
+    /* 数字まわりの白背景（そのまま使える） */
+    #countdownOverlay::before {
+      content: attr(data-text);
+      padding: 24px 36px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
   
-  #countdownOverlay[hidden] {
-    pointer-events: none;
-  }
-
-  /* カウントダウン後ガイド（左上詰め表示） */
-  textarea.input-guide {
-    text-align: left;        /* 左寄せ */
-    color: #888;             /* 薄い文字 */
-    font-size: 14px;         /* 小さめ */
-    line-height: 1.4;
-    padding-top: 6px;        
-    padding-left: 6px;
-  }
-
-  /* 開始前ガイド：中央表示 */
-  textarea.input-guide-before {
-    text-align: center;
-    color: #888;
-    font-size: 1.1em;
-    line-height: 1.6;
   
-    display: flex;
-    align-items: center;      /* 縦中央 */
-    justify-content: center;  /* 横中央 */
-  }
-
-  /* カウントダウン後ガイド：左上詰め */
-  textarea.input-guide-after {
-    text-align: left;
-    color: #888;
-    font-size: 14px;
-    line-height: 1.4;
-    padding-top: 6px;
-    padding-left: 6px;
-  }
+    #countdownOverlay {
+      pointer-events: auto;
+    }
+    
+    #countdownOverlay[hidden] {
+      pointer-events: none;
+    }
+  
+    /* カウントダウン後ガイド（左上詰め表示） */
+    textarea.input-guide {
+      text-align: left;        /* 左寄せ */
+      color: #888;             /* 薄い文字 */
+      font-size: 14px;         /* 小さめ */
+      line-height: 1.4;
+      padding-top: 6px;        
+      padding-left: 6px;
+    }
+  
+    /* 開始前ガイド：中央表示 */
+    textarea.input-guide-before {
+      text-align: center;
+      color: #888;
+      font-size: 1.1em;
+      line-height: 1.6;
+    
+      display: flex;
+      align-items: center;      /* 縦中央 */
+      justify-content: center;  /* 横中央 */
+    }
+  
+    /* カウントダウン後ガイド：左上詰め */
+    textarea.input-guide-after {
+      text-align: left;
+      color: #888;
+      font-size: 14px;
+      line-height: 1.4;
+      padding-top: 6px;
+      padding-left: 6px;
+    }
 
 
 
@@ -614,10 +633,11 @@
       <div class="typingArea">
         <textarea
           id="input"
+          <div id="countdownOverlay" hidden></div>
           readonly
         ></textarea>       
       </div>
-      <div id="countdownOverlay" hidden></div>
+      
 
       <div id="result"></div>
 
@@ -730,6 +750,7 @@
   <script type="module" src="./js/app.js"></script>
 </body>
 </html>
+
 
 
 
