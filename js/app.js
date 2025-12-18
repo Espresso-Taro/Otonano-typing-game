@@ -1885,7 +1885,7 @@ async function showCountdownOverlay(sec = 3) {
   for (let i = sec; i > 0; i--) {
     el.textContent = i;
     await new Promise(r => setTimeout(r, 1000));
-  }finally{
+  }finaly{
     // ★ 何があっても必ず閉じる
     el.hidden = true;
     el.textContent = "";
@@ -2474,6 +2474,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
