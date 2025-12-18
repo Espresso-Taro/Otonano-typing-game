@@ -1829,12 +1829,13 @@ async function onGroupChanged() {
 
   if (State.currentGroupId && State.currentGroupRole === "owner") {
     await loadPendingRequests();
-  } else if (pendingList) {
-    pendingList.innerHTML = "";
-    const li = document.createElement("li");
-    li.textContent = "owner のみ表示されます。";
-    pendingList.appendChild(li);
+  } if (State.currentGroupId && State.currentGroupRole === "owner") {
+    await loadPendingRequests();
+  } else {
+    // owner でない場合は単にクリアするだけ
+    if (pendingList) pendingList.innerHTML = "";
   }
+
 
   await loadGroupRanking();
 }
@@ -2520,6 +2521,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
