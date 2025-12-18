@@ -335,6 +335,9 @@ userMgr.onUserChanged(async () => {
   const prefs = loadPrefsOf(userName);
   applyPrefsToUI(prefs);
 
+  // ★ ユーザー切替時は必ず練習難度に同期
+  syncRankDifficultyFromPractice(getPracticeDifficulty());
+
   if (dailyTaskEl?.checked) enableDailyTask();
   else disableDailyTask();
 
@@ -2608,6 +2611,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
