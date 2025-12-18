@@ -5,7 +5,7 @@
 // ・スタート前は index.html の data-guide を表示（上揃え・横中央）
 // ・カウントダウン時のみ上下中央
 import { rankByCPM } from "./rankUtil.js";
-const START_GUIDE_TEXT = "スタートボタン or Spaceキーで入力開始";
+const START_GUIDE_TEXT = "ここをクリック or Spaceキーで入力開始";
 export class TypingEngine {
   constructor(opts = {}) {
     this.textEl = opts.textEl || null;
@@ -328,6 +328,7 @@ export class TypingEngine {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+
 
 
 
