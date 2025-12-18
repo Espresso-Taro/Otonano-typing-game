@@ -228,10 +228,9 @@ async function startTypingByUserAction() {
     // readOnly は true にしない
   });
 
-  // ★ 最初の実入力でガイド解除 → 正式開始（placeholder版）
-  const beginRealTypingOnce = () => {
-    inputEl.removeEventListener("compositionstart", beginRealTypingOnce);
-    inputEl.removeEventListener("input", beginRealTypingOnce);
+  // ★ 最初の実入力でガイド解除 → 正式開始（確定後判定版）
+  const beginRealTypingOnceByInput = () => {
+    inputEl.removeEventListener("input", beginRealTypingOnceByInput);
   
     // placeholder ガイド解除
     inputEl.placeholder = "";
@@ -241,13 +240,31 @@ async function startTypingByUserAction() {
   
     isCountingDown = false;
   
-    // ★ ここで正式スタート
+    // ★ 物理キー入力なので即開始
     engine.startNow();
   };
   
-  // IMEでも物理キーでも反応
-  inputEl.addEventListener("compositionstart", beginRealTypingOnce);
-  inputEl.addEventListener("input", beginRealTypingOnce);
+  const beginRealTypingOnceByCompositionEnd = () => {
+    inputEl.removeEventListener("compositionend", beginRealTypingOnceByCompositionEnd);
+  
+    // placeholder ガイド解除
+    inputEl.placeholder = "";
+    inputEl.classList.remove("input-guide-before");
+    inputEl.classList.remove("input-guide-after");
+    inputEl.readOnly = false;
+  
+    isCountingDown = false;
+  
+    // ★ IME確定後に開始（未確定中は評価しない）
+    engine.startNow();
+  };
+  
+  // 物理キーボード用
+  inputEl.addEventListener("input", beginRealTypingOnceByInput, { once: true });
+  
+  // IME用（確定時）
+  inputEl.addEventListener("compositionend", beginRealTypingOnceByCompositionEnd, { once: true });
+
 
 
 }
@@ -2591,6 +2608,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
