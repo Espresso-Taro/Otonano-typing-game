@@ -1925,16 +1925,20 @@ function bindTextareaStart() {
 
     // ③ カウントダウン（overlay）
     await showCountdownOverlay(3);
-
-    // ④ ★ ガイド表示（ここが index の代替）
+    
+    // ④ カウントダウン終了後ガイド
     inputEl.readOnly = true;
     inputEl.value = AFTER_COUNTDOWN_GUIDE_TEXT;
-    inputEl.classList.add("input-guide");
+    
+    // ★ クラス切り替え
+    inputEl.classList.remove("input-guide-before");
+    inputEl.classList.add("input-guide-after");
+
 
     // ⑤ 最初の入力で開始
     const onFirstInput = () => {
       inputEl.removeEventListener("input", onFirstInput);
-      inputEl.classList.remove("input-guide");
+      inputEl.classList.remove("input-guide-after");
       inputEl.value = "";
       inputEl.readOnly = false;
 
@@ -2502,6 +2506,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
