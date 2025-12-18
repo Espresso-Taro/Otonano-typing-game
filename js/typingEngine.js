@@ -302,8 +302,8 @@ export class TypingEngine {
     // ★ スタート前専用ガイドを value に入れる
     el.value = START_GUIDE_TEXT;
   
-    // 上揃え・横中央
-    this._restoreBasePadding();
+    // ★ 上下左右中央にする
+    this._applyVerticalCenterPadding();
   }
 
 
@@ -328,6 +328,7 @@ export class TypingEngine {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+
 
 
 
