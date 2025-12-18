@@ -175,7 +175,7 @@ async function startTypingByUserAction() {
   await showCountdownOverlay(3);
 
   // ★ カウントダウン後ガイドを表示
-  inputEl.readOnly = true;
+  inputEl.readOnly = false;
   inputEl.value = "入力してください。";
   
   // ガイド用クラスを明示的に付与
@@ -2534,6 +2534,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
