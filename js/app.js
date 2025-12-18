@@ -108,7 +108,8 @@ const startBtn = $("startBtn");
 const inputEl = $("input");
 if (inputEl) {
   inputEl.addEventListener("touchstart", (e) => {
-    isTouchSwiping = false;
+    isTouchMoving = false; // ★ 毎回リセット
+
     const t = e.touches[0];
     touchStartX = t.clientX;
     touchStartY = t.clientY;
@@ -120,24 +121,25 @@ if (inputEl) {
     const dy = Math.abs(t.clientY - touchStartY);
 
     if (dx > SWIPE_THRESHOLD || dy > SWIPE_THRESHOLD) {
-      isTouchSwiping = true;
+      isTouchMoving = true; // ★ スワイプ確定
     }
   }, { passive: true });
 
   inputEl.addEventListener("touchend", () => {
-    // 指を離した後もしばらく無効化（誤爆防止）
+    // 次の操作に備えてリセット
     setTimeout(() => {
-      isTouchSwiping = false;
+      isTouchMoving = false;
     }, 50);
   });
 }
+
 
 const textEl = $("text");
 const resultEl = $("result");
 
 if (inputEl) {
   inputEl.addEventListener("focus", (e) => {
-    if (isTouchSwiping) {
+    if (isTouchMoving) {
       e.preventDefault();
       inputEl.blur();
     }
@@ -237,7 +239,7 @@ function resetTypingUI() {
 
 async function startTypingByUserAction() {
   // ★ スワイプ中は開始しない
-  if (isTouchSwiping) return;
+  if (isTouchMoving) return;
   // ★ 再入防止（最重要）
   if (isCountingDown || engine.started || engine.ended) return;
 
@@ -2659,6 +2661,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
