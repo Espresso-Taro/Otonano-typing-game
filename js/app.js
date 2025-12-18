@@ -1936,19 +1936,17 @@ async function showCountdownOverlay(sec = 3) {
   const el = document.getElementById("countdownOverlay");
   if (!el) return;
 
-  el.hidden = false;
-
   try {
     for (let i = sec; i > 0; i--) {
-      el.textContent = i;
+      el.setAttribute("data-text", String(i));
       await new Promise(r => setTimeout(r, 1000));
     }
   } finally {
-    // ★ 何があっても必ず閉じる
-    el.hidden = true;
-    el.textContent = "";
+    // ★ 必ず消す
+    el.removeAttribute("data-text");
   }
 }
+
 
 
 let startedByTap = false;
@@ -2535,6 +2533,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
