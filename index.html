@@ -444,14 +444,12 @@
       color: #000;
     }
     
-    /* typingArea を基準にする */
     .typingArea {
-      position: relative;   /* ★ 追加 */
+      position: relative;
     }
     
-    /* カウントダウンを textarea の中央に重ねる */
     #countdownOverlay {
-      position: absolute;   /* ★ fixed → absolute */
+      position: absolute;
       inset: 0;
     
       display: flex;
@@ -461,19 +459,27 @@
       font-size: 64px;
       font-weight: 700;
       color: #000;
-      background: transparent;
-      z-index: 10;          /* textarea より上 */
-      pointer-events: none; /* 入力を邪魔しない */
+    
+      pointer-events: none;   /* 入力を邪魔しない */
+      z-index: 10;
     }
+
     
     /* 数字まわりの白背景（そのまま使える） */
-    #countdownOverlay::before {
+    /* data-text がある時だけ表示 */
+    #countdownOverlay[data-text]::before {
       content: attr(data-text);
+    
       padding: 24px 36px;
       background: #fff;
       border-radius: 16px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.15);
     }
+    
+    #countdownOverlay:not([data-text]) {
+      display: none;
+    }
+
   
   
     /* カウントダウン後ガイド（左上詰め表示） */
@@ -739,6 +745,7 @@
   <script type="module" src="./js/app.js"></script>
 </body>
 </html>
+
 
 
 
