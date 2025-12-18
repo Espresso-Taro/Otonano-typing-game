@@ -1668,7 +1668,6 @@ async function refreshMyGroups() {
     const opt = document.createElement("option");
     opt.value = g.groupId;
     opt.textContent = g.name ?? "(no name)";
-    opt.dataset.role = g.role ?? "member";
     currentGroupSelect.appendChild(opt);
   }
 
@@ -1694,19 +1693,9 @@ async function refreshMyGroups() {
 }
 
 async function updateCurrentGroupRoleUI() {
-  if (!currentGroupSelect) return;
-
-  const options = Array.from(currentGroupSelect.options);
-  for (const opt of options) {
-    if (opt.value === State.currentGroupId) {
-      // owner 自身の role は変わらないが
-      // UI 再評価を走らせる
-      opt.dataset.role = State.currentGroupRole;
-    }
-  }
-
-  await onGroupChanged(); // ← ここが重要
+  // 何もしない
 }
+
 
 async function loadPendingRequests() {
   if (!pendingList) return;
@@ -1792,23 +1781,37 @@ async function resolveCurrentGroupRole() {
 }
 
 async function onGroupChanged() {
-  State.currentGroupRole = await resolveCurrentGroupRole();
   if (!currentGroupSelect) return;
 
   const sel = currentGroupSelect.selectedOptions[0];
-  State.currentGroupId = sel?.value ?? "";
-  State.currentGroupRole = sel?.dataset?.role ?? null;
+  const nextGroupId = sel?.value ?? "";
+
+  State.currentGroupId = nextGroupId;
+
+  // ★ role は必ず Firestore からのみ決定
+  State.currentGroupRole = await resolveCurrentGroupRole();
 
   setSavedGroupIdFor(userMgr.getCurrentPersonalId(), State.currentGroupId);
 
-  if (leaveGroupBtn) leaveGroupBtn.disabled = !State.currentGroupId;
-  if (deleteGroupBtn) deleteGroupBtn.disabled = !(State.currentGroupId && State.currentGroupRole === "owner");
+  if (leaveGroupBtn) {
+    leaveGroupBtn.disabled = !State.currentGroupId;
+  }
+
+  if (deleteGroupBtn) {
+    deleteGroupBtn.disabled = !(
+      State.currentGroupId && State.currentGroupRole === "owner"
+    );
+  }
 
   if (pendingBox) {
-    pendingBox.style.display = (State.currentGroupId && State.currentGroupRole === "owner") ? "block" : "none";
+    pendingBox.style.display =
+      (State.currentGroupId && State.currentGroupRole === "owner")
+        ? "block"
+        : "none";
   }
+
   if (State.currentGroupId && State.currentGroupRole === "owner") {
-    await loadPendingRequests();   // ★ ここに集約
+    await loadPendingRequests();
   } else if (pendingList) {
     pendingList.innerHTML = "";
     const li = document.createElement("li");
@@ -1818,6 +1821,7 @@ async function onGroupChanged() {
 
   await loadGroupRanking();
 }
+
 
 /* =========================================================
    Bind UI events
@@ -2507,6 +2511,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
