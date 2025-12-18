@@ -1834,59 +1834,6 @@ function bindModal() {
 }
 
 function bindTypingButtons() {
-  const canStartNow = () => {
-    if (!startBtn || startBtn.disabled) return false;
-    if (startBtn.style.display === "none") return false;
-
-    // モーダル表示中は開始しない
-    if (modalBackdrop && modalBackdrop.style.display === "flex") return false;
-
-    // フォーム操作中（select等）に Space が誤爆しないようガード
-    const ae = document.activeElement;
-    const tag = ae?.tagName || "";
-    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
-      // ただし「タイピング欄（disabled）」にフォーカスがある場合は許可
-      if (ae !== inputEl) return false;
-    }
-
-    return true;
-  };
-
-  const startSequence = async () => {
-    if (!inputEl || !canStartNow()) return;
-    
-    // ★② 入力欄を有効化
-    inputEl.disabled = false;
-  
-    // ★③ Android対策：value を触る（これが決定打）
-    inputEl.value = "";
-  
-    // ★④ ユーザー操作中に focus（iOS / Android 両対応）
-    inputEl.focus({ preventScroll: true });
-    
-    // ★ スタート押下時に見本文を画面上へ
-    scrollTextToTopOnMobile();
-
-    // 開始したらスタートを消す（要件）
-    startBtn.style.display = "none";
-
-    // カウントダウン → 開始
-    await engine.showCountdownInTextarea(3);
-    engine.startNow();
-  };
-
-  on(startBtn, "click", startSequence);
-
-  // Space/Enter で開始（app.js側）
-  document.addEventListener("keydown", (e) => {
-    if (!canStartNow()) return;
-
-    if (e.code === "Space" || e.code === "Enter") {
-      e.preventDefault();
-      startSequence();
-    }
-  });
-
   on(skipBtn, "click", () => {
     // 今日の課題がONなら、「普段OFFにした時」と同じ経路でOFFにする（復元も含む）
     if (dailyTaskEl && dailyTaskEl.checked) {
@@ -1929,6 +1876,31 @@ function syncRankDifficultyFromPractice(diff) {
   reloadAllRankings();
   loadMyAnalytics();
 }
+
+let startedByTap = false;
+
+function bindTextareaStart() {
+  if (!inputEl) return;
+
+  inputEl.addEventListener("focus", async () => {
+    // すでに開始済み・終了済みは無視
+    if (startedByTap || engine.started || engine.ended) return;
+
+    startedByTap = true;
+
+    // 見本文を上へ（スマホ）
+    scrollTextToTopOnMobile();
+
+    // Android 安定化（編集操作として認識させる）
+    inputEl.disabled = false;
+    inputEl.value = "";
+
+    // カウントダウン → 開始
+    await engine.showCountdownInTextarea(3);
+    engine.startNow();
+  });
+}
+
 
 function bindPracticeFilters() {
   on(difficultyEl, "change", () => {
@@ -2480,6 +2452,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
