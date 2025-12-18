@@ -1882,24 +1882,27 @@ let startedByTap = false;
 function bindTextareaStart() {
   if (!inputEl) return;
 
-  inputEl.addEventListener("focus", async () => {
-    // すでに開始済み・終了済みは無視
-    if (startedByTap || engine.started || engine.ended) return;
-
-    startedByTap = true;
-
-    // Android 安定化（編集操作として認識させる）
-    inputEl.disabled = false;
-    inputEl.value = "";
+  const onTapStart = async () => {
+    // すでに開始済み/モーダル中などのガードは必要なら入れる
+    // （startBtn方式の canStartNow と同等）
 
     // 見本文を上へ（スマホ）
     scrollTextToTopOnMobile();
 
+    // ここが重要：readOnly解除してから value を空にして focus
+    inputEl.readOnly = false;
+    inputEl.value = "";
+    inputEl.focus({ preventScroll: true });
+
     // カウントダウン → 開始
     await engine.showCountdownInTextarea(3);
     engine.startNow();
-  });
+  };
+
+  // クリックより早く拾えるので pointerdown 推奨
+  inputEl.addEventListener("pointerdown", onTapStart, { passive: true });
 }
+
 
 
 function bindPracticeFilters() {
@@ -2453,6 +2456,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
