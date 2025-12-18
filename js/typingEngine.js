@@ -189,16 +189,21 @@ export class TypingEngine {
     // 入力
     this.inputEl.addEventListener("input", () => {
       if (!this.started || this.ended) return;
-
+    
+      // ★ IME変換中は「確定済み文字」だけで描画（valueは見ない）
       if (this.isComposing) {
         this._renderByCommitted(this.lastCommittedValue);
         return;
       }
-
-      this.lastCommittedValue = this._getCommittedValueSafe();
-      this._renderByCommitted(this.lastCommittedValue);
+    
+      // ★ ここに来るのは「非IME入力」または「IME確定後」
+      const committed = this._getCommittedValueSafe();
+      this.lastCommittedValue = committed;
+    
+      this._renderByCommitted(committed);
       this._tryFinishIfMatched();
     });
+
   }
 
   /* =========================
@@ -356,6 +361,7 @@ export class TypingEngine {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+
 
 
 
