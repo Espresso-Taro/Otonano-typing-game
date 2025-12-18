@@ -145,8 +145,8 @@ const pendingList = $("pendingList");
 /* =========================================================
    Services
 ========================================================= */
-// ===== スマホ入力時：見本文を画面上へスクロール =====
-function scrollTextToTopOnMobile() {
+// ===== スマホ入力時：見本文を画面上へスクロール（少し下に余白）=====
+function scrollTextToTopOnMobile(offsetPx = 40) {
   if (!textEl) return;
 
   // スマホ判定（iOS / Android）
@@ -155,12 +155,19 @@ function scrollTextToTopOnMobile() {
 
   // 少し遅らせて（キーボード表示後に）スクロール
   setTimeout(() => {
-    textEl.scrollIntoView({
-      block: "start",
+    const rect = textEl.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+    // ★ 見本文の位置 − オフセット
+    const targetY = rect.top + scrollTop - offsetPx;
+
+    window.scrollTo({
+      top: targetY,
       behavior: "smooth"
     });
   }, 50);
 }
+
 
 function resetTypingUI() {
   if (!inputEl) return;
@@ -194,7 +201,7 @@ async function startTypingByUserAction() {
 
   isCountingDown = true;
 
-  scrollTextToTopOnMobile();
+  scrollTextToTopOnMobile(40);
 
   inputEl.readOnly = false;
   inputEl.disabled = false;
@@ -2575,6 +2582,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
