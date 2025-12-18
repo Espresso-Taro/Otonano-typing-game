@@ -1907,30 +1907,45 @@ async function showCountdownOverlay(sec = 3) {
 
 let startedByTap = false;
 
+const AFTER_COUNTDOWN_GUIDE_TEXT = "入力してください。";
+
 function bindTextareaStart() {
   if (!inputEl) return;
 
   const onTapStart = async () => {
     if (engine.started || engine.ended) return;
 
-    // ★① 入力可能に
+    // ① フリックを出す（最優先）
     inputEl.readOnly = false;
     inputEl.value = "";
-
-    // ★② ユーザー操作中に focus → 確実にフリックが出る
     inputEl.focus({ preventScroll: true });
 
-    // ★③ フリックが出た後でスクロール
+    // ② フリック後に本文スクロール
     scrollTextToTopOnMobile();
 
-    // ★④ textarea を触らないカウントダウン
+    // ③ カウントダウン（overlay）
     await showCountdownOverlay(3);
 
-    engine.startNow();
+    // ④ ★ ガイド表示（ここが index の代替）
+    inputEl.readOnly = true;
+    inputEl.value = AFTER_COUNTDOWN_GUIDE_TEXT;
+    inputEl.classList.add("input-guide");
+
+    // ⑤ 最初の入力で開始
+    const onFirstInput = () => {
+      inputEl.removeEventListener("input", onFirstInput);
+      inputEl.classList.remove("input-guide");
+      inputEl.value = "";
+      inputEl.readOnly = false;
+
+      engine.startNow();
+    };
+    inputEl.addEventListener("input", onFirstInput);
   };
 
   inputEl.addEventListener("pointerdown", onTapStart);
 }
+
 
 
 
@@ -2487,6 +2502,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
