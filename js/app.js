@@ -1885,8 +1885,11 @@ async function showCountdownOverlay(sec = 3) {
   for (let i = sec; i > 0; i--) {
     el.textContent = i;
     await new Promise(r => setTimeout(r, 1000));
+  }finally{
+    // ★ 何があっても必ず閉じる
+    el.hidden = true;
+    el.textContent = "";
   }
-  el.hidden = true;
 }
 
 let startedByTap = false;
@@ -2471,6 +2474,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
