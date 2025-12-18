@@ -108,7 +108,7 @@ const startBtn = $("startBtn");
 const inputEl = $("input");
 if (inputEl) {
   inputEl.addEventListener("touchstart", (e) => {
-    isTouchMoving = false; // ★ 毎回リセット
+    touchMoved = false;
 
     const t = e.touches[0];
     touchStartX = t.clientX;
@@ -121,25 +121,28 @@ if (inputEl) {
     const dy = Math.abs(t.clientY - touchStartY);
 
     if (dx > SWIPE_THRESHOLD || dy > SWIPE_THRESHOLD) {
-      isTouchMoving = true; // ★ スワイプ確定
+      touchMoved = true; // ★ スワイプ確定
     }
   }, { passive: true });
 
-  inputEl.addEventListener("touchend", () => {
-    // 次の操作に備えてリセット
-    setTimeout(() => {
-      isTouchMoving = false;
-    }, 50);
+  inputEl.addEventListener("touchend", (e) => {
+    // ★ 動いていなければ「タップ」なので開始
+    if (!touchMoved) {
+      startTypingByUserAction();
+    }
+
+    // 次操作に備えてリセット
+    touchMoved = false;
   });
 }
-
 
 const textEl = $("text");
 const resultEl = $("result");
 
 if (inputEl) {
   inputEl.addEventListener("focus", (e) => {
-    if (isTouchMoving) {
+    // touch 操作中のフォーカス誤爆を抑制
+    if (touchMoved) {
       e.preventDefault();
       inputEl.blur();
     }
@@ -238,8 +241,6 @@ function resetTypingUI() {
 
 
 async function startTypingByUserAction() {
-  // ★ スワイプ中は開始しない
-  if (isTouchMoving) return;
   // ★ 再入防止（最重要）
   if (isCountingDown || engine.started || engine.ended) return;
 
@@ -489,12 +490,11 @@ let isBooting = true; // ★起動中は true
 
 let isCountingDown = false;
 
-// ===== タッチスワイプ誤爆防止 =====
-let isTouchMoving = false;
+// ===== タップ / スワイプ判定 =====
 let touchStartX = 0;
 let touchStartY = 0;
-const SWIPE_THRESHOLD = 10; // px
-
+let touchMoved = false;
+const SWIPE_THRESHOLD = 10;
 
 /* =========================================================
    State
@@ -2673,6 +2673,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
