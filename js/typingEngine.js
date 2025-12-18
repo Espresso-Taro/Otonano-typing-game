@@ -151,6 +151,18 @@ export class TypingEngine {
     this.inputEl.focus();
   }
 
+    /* =========================
+     ★ 時間計測のみ開始（カウントダウン後）
+  ========================= */
+  startTimerOnly() {
+    if (this.started) return;
+
+    this.started = true;
+    this.ended = false;
+    this.startTimeMs = Date.now();
+    this.keystrokes = 0;
+  }
+
 
   /* =========================
      イベント登録
@@ -361,6 +373,7 @@ export class TypingEngine {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+
 
 
 
