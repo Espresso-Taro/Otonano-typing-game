@@ -1125,12 +1125,6 @@ function setCurrentItem(item, { daily = false } = {}) {
 
   engine.enableReadyState();
 
-  if (startBtn) {
-    startBtn.disabled = false;
-    startBtn.style.display = ""; // ★文章更新で必ず復活
-  }
-
-
 }
 
 /* =========================================================
@@ -2486,6 +2480,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
