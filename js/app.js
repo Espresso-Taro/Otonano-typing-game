@@ -2751,10 +2751,17 @@ onAuthStateChanged(auth, async (user) => {
   //document.body.classList.remove("preload");
 //});
 
-// ===== ページ再読み込み時のみ、必ず最上部 =====
+// ===== スクロール位置の自動復元を無効化（最重要）=====
+if ("scrollRestoration" in history) {
+  history.scrollRestoration = "manual";
+}
+
+// ===== ページ再読み込み時のみ最上部 =====
 window.addEventListener("load", () => {
-  window.scrollTo({ top: 0, behavior: "auto" });
+  window.scrollTo(0, 0);
 });
+
+
 
 
 
