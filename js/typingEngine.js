@@ -70,7 +70,6 @@ export class TypingEngine {
       this.inputEl.value = "";
       this.inputEl.placeholder = "";   // ★ 追加
       this.inputEl.disabled = false; // ← true をやめる
-      this.inputEl.readOnly = true;  // ←開始前は readOnly
     }
 
     if (this.resultEl) this.resultEl.textContent = "";
@@ -343,6 +342,7 @@ export class TypingEngine {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+
 
 
 
