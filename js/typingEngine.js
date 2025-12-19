@@ -290,7 +290,7 @@ export class TypingEngine {
     if (!this.inputEl) return;
   
     this.inputEl.value = "";
-    this.inputEl.placeholder = "ここに上の文章を入力してください。(入力が始まると計測開始)";
+    this.inputEl.placeholder = "上の文章を入力してください。(入力が始まると計測開始)";
     this.inputEl.classList.add("input-guide-after");
   }
 
@@ -317,6 +317,7 @@ export class TypingEngine {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+
 
 
 
