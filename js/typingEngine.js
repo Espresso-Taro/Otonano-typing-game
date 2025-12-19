@@ -302,15 +302,6 @@ export class TypingEngine {
     /* =========================
      ガイド（placeholder 統一）
   ========================= */
-  _setGuidePlaceholder(text) {
-    if (!this.inputEl) return;
-    const el = this.inputEl;
-  
-    el.value = "";
-    el.placeholder = (text ?? "").toString();
-    el.classList.add("input-guide-after");
-  }
-
   _clearGuidePlaceholder() {
     if (!this.inputEl) return;
     this.inputEl.placeholder = "";
@@ -352,6 +343,7 @@ export class TypingEngine {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+
 
 
 
