@@ -482,7 +482,7 @@
 
   
   
-    /* カウントダウン後ガイド（左上詰め表示） */
+    /* 入力前ガイド（左上詰め表示） */
     textarea.input-guide {
       text-align: left;        /* 左寄せ */
       color: #888;             /* 薄い文字 */
@@ -491,33 +491,6 @@
       padding-top: 6px;        
       padding-left: 6px;
     }
-  
-    /* 開始前ガイド：中央表示（安全版） */
-    textarea.input-guide-before {
-      text-align: center;
-      color: #888;
-      font-size: 1.1em;
-      line-height: 1.6;
-    
-      /* ★ display:flex は使わない */
-      padding-top: calc(50px);     /* 高さに応じて微調整可 */
-    }
-
-  
-    /* カウントダウン後ガイド：左上詰め */
-    textarea.input-guide-after {
-      text-align: left;
-      color: #888;
-      font-size: 14px;
-      line-height: 1.4;
-      padding-top: 6px;
-      padding-left: 6px;
-    }
-
-
-
-
-
 
     /* ===== 初期ロード時のガタつき防止 ===== */
     body.preload {
@@ -745,6 +718,7 @@
   <script type="module" src="./js/app.js"></script>
 </body>
 </html>
+
 
 
 
