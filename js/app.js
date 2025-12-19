@@ -2540,6 +2540,7 @@ function bindGroupUI() {
 ========================================================= */
 function onTypingFinish({ metrics, meta }) {
   try {
+    stopElapsedTimeDisplay();
     const cpm = Math.round(Number(metrics?.cpm ?? 0));
     const timeSec = Math.round(Number(metrics?.timeSec ?? 0) * 10) / 10;
     const rank = metrics?.rank ?? rankByCPM(cpm);
@@ -2647,7 +2648,6 @@ const engine = new TypingEngine({
   inputEl,
   resultEl,
   onFinish: onTypingFinish
-  stopElapsedTimeDisplay();
 });
 engine.attach();
 
@@ -2752,6 +2752,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
