@@ -88,6 +88,9 @@ function bindToggle(btnId, panelId) {
 const authBadge = $("authBadge");
 const metaInfoEl = $("metaInfo");
 
+// ★ 追加
+const topTabsEl = $("topTabs");
+
 // user manager
 const userSelect = $("userSelect");
 const addUserBtn = $("addUserBtn");
@@ -191,13 +194,9 @@ function setupStableAutoScrollOnKeyboard() {
     pending = false;
   
     setTimeout(() => {
-      textEl.scrollIntoView({
-        behavior: "auto",   // smooth をやめる
-        block: "start"
-      });
-    }, 200); // 100〜200ms
+      scrollAfterTopTabsReady();
+    }, 150);
   };
-
 
   window.addEventListener("resize", scrollTextIntoView);
 
@@ -206,6 +205,34 @@ function setupStableAutoScrollOnKeyboard() {
   }
 }
 
+function scrollAfterTopTabsReady() {
+  if (!textEl || !topTabsEl) return;
+
+  const h = topTabsEl.offsetHeight;
+
+  // すでに表示済みなら即スクロール
+  if (h > 0) {
+    textEl.scrollIntoView({ behavior: "auto", block: "start" });
+    return;
+  }
+
+  // 初期非表示 → 表示されるのを監視
+  const ro = new ResizeObserver(entries => {
+    const height = entries[0].contentRect.height;
+    if (height > 0) {
+      ro.disconnect();
+
+      requestAnimationFrame(() => {
+        textEl.scrollIntoView({
+          behavior: "auto",
+          block: "start"
+        });
+      });
+    }
+  });
+
+  ro.observe(topTabsEl);
+}
 
 
 function resetTypingUI() {
@@ -2586,6 +2613,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
