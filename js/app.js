@@ -165,9 +165,49 @@ const pendingList = $("pendingList");
 
 let textBaseY = null;
 
+const inputTimeEl = $("inputTime");
+
+let typingStartAt = null;
+let timeRAF = null;
+
+
 /* =========================================================
    Services
 ========================================================= */
+function startElapsedTimeDisplay() {
+  if (!inputTimeEl) return;
+
+  typingStartAt = performance.now();
+
+  const tick = () => {
+    if (typingStartAt == null) return;
+
+    const elapsedMs = performance.now() - typingStartAt;
+    const sec = Math.floor(elapsedMs / 1000);
+    const ms = Math.floor((elapsedMs % 1000) / 100);
+
+    inputTimeEl.textContent = `経過時間 ${sec}.${ms}s`;
+
+    timeRAF = requestAnimationFrame(tick);
+  };
+
+  tick();
+}
+
+function stopElapsedTimeDisplay() {
+  if (timeRAF) {
+    cancelAnimationFrame(timeRAF);
+    timeRAF = null;
+  }
+  typingStartAt = null;
+}
+
+function resetElapsedTimeDisplay() {
+  stopElapsedTimeDisplay();
+  if (inputTimeEl) inputTimeEl.textContent = "";
+}
+
+
 function isMobileDevice() {
   return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 }
@@ -353,6 +393,8 @@ function startTypingImmediately() {
 
   // requestAnimationFrame をやめる（1文字目を捨てないため）
   engine.startNow();
+
+  startElapsedTimeDisplay();
 }
 
 function armStartOnFirstType() {
@@ -1354,6 +1396,7 @@ function setCurrentItem(item, { daily = false } = {}) {
   window.scrollTo({ top: 0, behavior: "auto" });
   // ★ 文章切り替え前に必ずリセット
   resetTypingUI();
+  resetElapsedTimeDisplay();
 
   State.currentItem = item;
 
@@ -2708,6 +2751,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
