@@ -477,6 +477,17 @@
     }
     
   </style>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "漢字変換対応 日本語タイピングゲーム",
+  "applicationCategory": "EducationalApplication",
+  "operatingSystem": "Web",
+  "description": "IME漢字変換を含めた実用的な日本語入力タイピング練習ゲーム。雑学100テーマ、ランキング、成長グラフ対応。"
+}
+</script>
+
 </head>
 
 <body class="preload">
@@ -490,7 +501,7 @@
 
     <!-- ===== SEO：強みを文章で明文化（検索エンジン向け説明） ===== -->
     <section class="card" aria-label="このタイピングゲームの特徴" style="margin-top:12px;">
-      <h2 style="margin-top:0;">雑学100テーマで学びながら、実用的な日本語入力を鍛える</h2>
+      <h2 style="margin-top:0;">漢字変換（IME）を含めた実用的な日本語タイピング練習</h2>
       <p class="muted" style="margin:0 0 10px;">
         ローマ字入力の速度だけでなく、<strong>漢字変換（IME）を含めた完全一致</strong>を前提にした練習ができます。
         仕事・レポート作成・事務入力など、実務に近い日本語入力のトレーニング向けです。
@@ -696,31 +707,51 @@
       </ul>
     </section>
 
-    <!-- ===== FAQ（検索語寄せ）===== -->
-    <section aria-label="よくある質問" style="margin-top: 16px;">
+    <section class="card" aria-label="よくある質問" style="margin-top:16px;">
       <h2>よくある質問（FAQ）</h2>
-
+    
+      <h3>漢字変換ありのタイピング練習はできますか？</h3>
+      <p>
+        はい。本ゲームは <strong>IMEによる漢字変換を前提</strong>に入力を判定します。
+        ローマ字入力の速度だけでなく、実際の日本語入力に近い形で練習できます。
+      </p>
+    
+      <h3>仕事やレポート作成の練習になりますか？</h3>
+      <p>
+        事務作業・文章作成を想定した文章構成のため、
+        <strong>社会人・学生の実務向けタイピング練習</strong>として利用できます。
+      </p>
+    
+      <h3>無料で使えますか？</h3>
+      <p>
+        はい。<strong>完全無料・登録不要</strong>で利用できます。
+        ブラウザだけでそのまま練習可能です。
+      </p>
+    
+      <h3>スマホでも使えますか？</h3>
+      <p>
+        スマートフォンでも利用できますが、
+        IME入力を含むため <strong>PCでの利用を推奨</strong>しています。
+      </p>
       <details>
-        <summary>漢字変換を使ったタイピング練習はできますか？</summary>
-        <p>できます。IMEの変換を含め、出題文と完全一致するまでの速さをスコア化します。</p>
+        <summary>グループでタイピング対戦はできますか？（ランキング対応）</summary>
+        <p>
+          はい。<strong>グループを作成・参加</strong>することで、
+          友人・会社・学校などの身内メンバーと
+          <strong>ランキング形式でタイピング対戦</strong>ができます。
+          全国ランキングにも同時に参加可能です。
+        </p>
       </details>
-
+    
       <details>
-        <summary>日本語IME入力でも正しく判定されますか？（変換中の文字は？）</summary>
-        <p>変換確定前（変換中）は判定しません。確定された文字だけで判定します。</p>
+        <summary>タイピングの成長をグラフで確認できますか？（CPM推移）</summary>
+        <p>
+          はい。<strong>スコア（CPM）の推移グラフ</strong>を自動生成し、
+          日々のタイピング成長を視覚的に確認できます。
+        </p>
       </details>
-
-      <details>
-        <summary>グループでタイピング対戦はできますか？</summary>
-        <p>できます。グループを作成・参加し、身内でランキング対戦が可能です（全国ランキングにも参加できます）。</p>
-      </details>
-
-      <details>
-        <summary>タイピングの成長をグラフで確認できますか？</summary>
-        <p>できます。スコア（CPM）の推移グラフで日々の成長を可視化します。</p>
-      </details>
-
     </section>
+
   </main>
 
   <footer>
@@ -748,6 +779,7 @@
   <script type="module" src="./js/app.js"></script>
 </body>
 </html>
+
 
 
 
