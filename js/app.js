@@ -168,6 +168,10 @@ let textBaseY = null;
 /* =========================================================
    Services
 ========================================================= */
+function isMobileDevice() {
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+
 function applyFontSizeByLength(lengthGroup) {
   // PC は一切変更しない
   if (!isMobileDevice()) {
@@ -2702,6 +2706,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
