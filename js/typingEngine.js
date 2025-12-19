@@ -129,40 +129,23 @@ export class TypingEngine {
      開始
   ========================= */
   startNow() {
-    if (!this.inputEl) return;
-  
-    // ★ 時間は startTimerOnly() で開始済み前提
-    // started / startTimeMs / keystrokes は触らない
-    this.ended = false;
-  
-    this.isComposing = false;
-    this.lastCommittedValue = "";
-  
-    // ガイド・カウントダウン系クラスを外す
-    this.inputEl.classList.remove("countdown", "input-guide");
-    this._restoreBasePadding();
-  
-    // placeholder ガイドを消す
-    this._clearGuidePlaceholder();
-  
-    // value は触らない
-    this.inputEl.disabled = false;
-    this.inputEl.focus();
-  }
-
-
-    /* =========================
-     ★ 時間計測のみ開始（カウントダウン後）
-  ========================= */
-  startTimerOnly() {
     if (this.started) return;
-
+  
     this.started = true;
     this.ended = false;
     this.startTimeMs = Date.now();
     this.keystrokes = 0;
+  
+    this.isComposing = false;
+    this.lastCommittedValue = "";
+  
+    this.inputEl.classList.remove("countdown", "input-guide");
+    this._restoreBasePadding();
+    this._clearGuidePlaceholder();
+  
+    this.inputEl.disabled = false;
+    this.inputEl.focus();
   }
-
 
   /* =========================
      イベント登録
@@ -207,7 +190,6 @@ export class TypingEngine {
 
     // 入力
     this.inputEl.addEventListener("input", () => {
-      if (isCountingDown) return;   // ★ 追加
       if (!this.started || this.ended) return;
     
       // ★ IME変換中は「確定済み文字」だけで描画（valueは見ない）
@@ -381,6 +363,7 @@ export class TypingEngine {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+
 
 
 
