@@ -5,7 +5,7 @@
 // ・スタート前は index.html の data-guide を表示（上揃え・横中央）
 // ・カウントダウン時のみ上下中央
 import { rankByCPM } from "./rankUtil.js";
-const START_GUIDE_TEXT = "ここをクリック or Spaceキーで入力開始";
+const START_GUIDE_TEXT = "入力してください。";
 export class TypingEngine {
   constructor(opts = {}) {
     this.textEl = opts.textEl || null;
@@ -303,14 +303,13 @@ export class TypingEngine {
     /* =========================
      ガイド（placeholder 統一）
   ========================= */
-  _setGuidePlaceholder(text, { before = false, after = false } = {}) {
+  _setGuidePlaceholder(text) {
     if (!this.inputEl) return;
     const el = this.inputEl;
-
-    // ガイドは value に入れない（IME未確定文字表示の邪魔をしない）
+  
     el.value = "";
     el.placeholder = (text ?? "").toString();
-    el.classList.toggle("input-guide-after", !!after);
+    el.classList.add("input-guide-after");
   }
 
   _clearGuidePlaceholder() {
@@ -332,9 +331,9 @@ export class TypingEngine {
     el.disabled = false;
     el.readOnly = true;
 
-    // ★ value ではなく placeholder に統一
-    this._setGuidePlaceholder(START_GUIDE_TEXT, { before: true, after: false });
-
+    _setGuidePlaceholder("入力してください。");
+    this.inputEl.classList.add("input-guide-after");
+    
     this._restoreBasePadding();
   }
 
@@ -361,6 +360,7 @@ export class TypingEngine {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+
 
 
 
