@@ -165,58 +165,46 @@ let textBaseY = null;
 /* =========================================================
    Services
 ========================================================= */
-// ===== スマホ入力時：見本文を画面上へスクロール（少し下に余白）=====
-function scrollTextToTopOnMobile(offsetPx = 50) {
-  if (!textEl) return;
-
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  if (!isMobile) return;
-
-  setTimeout(() => {
-    const baseY = textEl.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({ top: baseY - offsetPx, behavior: "smooth" });
-  }, 50);
-}
-
-// ===== スマホ：キーボード表示で見本文上部が隠れたら、自動で見える位置へ =====
-function setupAutoScrollForKeyboard() {
+// ===== スマホ：キーボード表示後に問題文を必ず見せる（ズレに強い版） =====
+function setupStableAutoScrollOnKeyboard() {
   if (!inputEl || !textEl) return;
 
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   if (!isMobile) return;
 
-  // 「今のfocusはユーザーがタップして起きた」ことを覚えるフラグ
   let pending = false;
 
-  // 入力欄をタップしてキーボードが出そうなときに pending を立てる
+  // ユーザーが入力欄をタップしたら「次の viewport 変化でスクロールする」
   inputEl.addEventListener("focus", () => {
     pending = true;
   });
 
-  // キーボードが閉じたら解除（連続スクロール防止）
   inputEl.addEventListener("blur", () => {
     pending = false;
   });
 
-  const doScroll = () => {
+  const scrollTextIntoView = () => {
     if (!pending) return;
-    // キーボード表示直後はレイアウトがまだ揺れるので、1フレーム待ってからスクロール
+
+    pending = false;
+
+    // viewport確定後に実行（重要）
     requestAnimationFrame(() => {
-      scrollTextToTopOnMobile(50);
+      textEl.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
     });
   };
 
-  // Android/多くのブラウザは window resize で取れる
-  window.addEventListener("resize", doScroll);
+  // Android / 多くのブラウザ
+  window.addEventListener("resize", scrollTextIntoView);
 
-  // iOS Safari は visualViewport の方が安定することが多い
+  // iOS Safari 対策（こちらの方が安定することが多い）
   if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", doScroll);
+    window.visualViewport.addEventListener("resize", scrollTextIntoView);
   }
 }
-
-
-
 
 
 function resetTypingUI() {
@@ -285,7 +273,6 @@ function startTypingByUserAction() {
 
   // フォーカス & スクロール
   inputEl.focus({ preventScroll: true });
-  scrollTextToTopOnMobile(50);
 
   // 開始トリガー登録（IME含む）
   inputEl.removeEventListener("compositionstart", startTypingImmediately);
@@ -2530,8 +2517,8 @@ engine.attach();
     textBaseY = textEl.offsetTop;
   }
 
-    // ★追加：スマホでキーボードが出たら見本文が見えるように自動スクロール
-  setupAutoScrollForKeyboard();
+  // ★ 追加（1回だけ）
+  setupStableAutoScrollOnKeyboard();
    
   bindModal();
   bindTypingButtons();
@@ -2598,6 +2585,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
