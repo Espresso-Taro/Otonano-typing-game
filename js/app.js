@@ -169,6 +169,12 @@ let textBaseY = null;
    Services
 ========================================================= */
 function applyFontSizeByLength(lengthGroup) {
+  // PC は一切変更しない
+  if (!isMobileDevice()) {
+    document.body.classList.remove("long-text", "xl-text");
+    return;
+  }
+
   document.body.classList.remove("long-text", "xl-text");
 
   if (lengthGroup === "long") {
@@ -177,6 +183,7 @@ function applyFontSizeByLength(lengthGroup) {
     document.body.classList.add("xl-text");
   }
 }
+
 
 function setupStableAutoScrollOnKeyboard() {
   if (!inputEl || !textEl) return;
@@ -2695,6 +2702,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
