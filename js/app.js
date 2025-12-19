@@ -189,14 +189,17 @@ function setupStableAutoScrollOnKeyboard() {
     pending = false;
   });
 
-  const scrollTextIntoView = () => {
+  const scrollTextIntoView = async () => {
     if (!pending) return;
     pending = false;
   
-    setTimeout(() => {
-      scrollAfterTopTabsReady();
-    }, 150);
+    // ① 慣性スクロールが止まるのを待つ
+    await waitForScrollSettled();
+  
+    // ② 上部タブの表示確定を待つ
+    scrollAfterTopTabsReady();
   };
+
 
   window.addEventListener("resize", scrollTextIntoView);
 
@@ -233,6 +236,49 @@ function scrollAfterTopTabsReady() {
   });
 }
 
+function waitForScrollSettled({ thresholdMs = 120, maxWaitMs = 500 } = {}) {
+  return new Promise(resolve => {
+    let lastY = window.scrollY;
+    let lastChange = performance.now();
+
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y !== lastY) {
+        lastY = y;
+        lastChange = performance.now();
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    const tick = () => {
+      const now = performance.now();
+
+      // 一定時間変化がなければ「落ち着いた」
+      if (now - lastChange >= thresholdMs) {
+        cleanup();
+        resolve();
+        return;
+      }
+
+      // 念のための上限
+      if (now - start >= maxWaitMs) {
+        cleanup();
+        resolve();
+        return;
+      }
+
+      requestAnimationFrame(tick);
+    };
+
+    const start = performance.now();
+    requestAnimationFrame(tick);
+
+    function cleanup() {
+      window.removeEventListener("scroll", onScroll);
+    }
+  });
+}
 
 
 function resetTypingUI() {
@@ -2613,6 +2659,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
