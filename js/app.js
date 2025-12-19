@@ -1350,6 +1350,8 @@ function pickRandomDifferentText() {
 }
 
 function setCurrentItem(item, { daily = false } = {}) {
+  // ★ 追加：必ず画面最上部へ
+  window.scrollTo({ top: 0, behavior: "auto" });
   // ★ 文章切り替え前に必ずリセット
   resetTypingUI();
 
@@ -2706,6 +2708,7 @@ onAuthStateChanged(auth, async (user) => {
 //window.addEventListener("load", () => {
   //document.body.classList.remove("preload");
 //});
+
 
 
 
