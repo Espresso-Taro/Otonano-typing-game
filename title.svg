@@ -27,16 +27,16 @@
   <text x="0" y="0" class="sub" dominant-baseline="hanging">
     IME KANJI TYPING FOR WORK
   </text>
+<!-- メインタイトル影 -->
+<text x="2" y="52" class="main-shadow" dominant-baseline="hanging">
+  <tspan x="2" dy="0">漢字変換対応の日本語タイピングゲーム</tspan>
+  <tspan x="2" dy="32">｜社会人向け・実務練習</tspan>
+</text>
 
-  <!-- メインタイトル影 -->
-  <text x="2" y="52" class="main-shadow" dominant-baseline="hanging">
-    漢字変換対応の日本語タイピングゲーム｜社会人向け・実務練習
-  </text>
-
-  <!-- メインタイトル本体 -->
-  <text x="0" y="48" class="main" dominant-baseline="hanging">
-    漢字変換対応の日本語タイピングゲーム｜社会人向け・実務練習
-  </text>
-
+<!-- メインタイトル本体 -->
+<text x="0" y="48" class="main" dominant-baseline="hanging">
+  <tspan x="0" dy="0">漢字変換対応の日本語タイピングゲーム</tspan>
+  <tspan x="0" dy="32">｜社会人向け・実務練習</tspan>
+</text>
 </svg>
 
