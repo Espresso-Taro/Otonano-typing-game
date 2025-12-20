@@ -1425,7 +1425,7 @@ function setCurrentItem(item, { daily = false } = {}) {
     difficulty: daily ? State.daily.diff : getPracticeDifficulty(),
     lengthGroup: daily ? State.daily.lengthGroup : getPracticeLengthGroup(),
     category: getPracticeCategory(),
-    theme: getPracticeTheme(),
+    theme: item?.theme ?? getPracticeTheme(),   // ★ 実文章のテーマを優先
     groupId: State.currentGroupId || null
   });
 
@@ -2778,6 +2778,7 @@ window.addEventListener("pageshow", () => {
     });
   });
 });
+
 
 
 
