@@ -40,6 +40,14 @@
     header, main, footer { max-width: var(--max); margin: 0 auto; padding: 16px; }
     header { padding-top: 28px; }
 
+    .page-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      text-align: center;
+      margin: 6px 0 10px;
+      color: #222;
+    }
+
     .section-heading {
       display: inline-block;
       border-bottom: 2px solid #222;
@@ -599,10 +607,6 @@
     <!-- ===============================
          タイトル
     ================================ -->
-    <h1 class="visually-hidden">
-      漢字変換対応の日本語タイピングゲーム｜社会人向け・実務練習
-    </h1>
-
     <div class="title-hero">
       <img
         src="./title.svg"
@@ -610,7 +614,9 @@
         loading="eager"
       />
     </div>
-
+    <h1 class="page-title">
+      漢字変換対応の日本語タイピングゲーム（社会人向け）
+    </h1>
     <p class="lead">
       IMEの<strong>漢字変換</strong>を含めた、実用的な<strong>日本語タイピング練習</strong>ができます。
     </p>
@@ -863,6 +869,23 @@
 <section class="card" style="margin-top:16px;">
   <h2 style="margin-top:0;">よくある質問（FAQ）</h2>
   <ul style="margin:0;">
+<details>
+  <summary>IMEとは何ですか？</summary>
+  <p>
+    IME（Input Method Editor）とは、日本語を入力するための仕組みです。
+    ローマ字で入力した文字を<strong>ひらがな・漢字・カタカナに変換</strong>する機能を指します。
+    本タイピングゲームでは、この<strong>漢字変換操作も含めて</strong>実務に近い日本語入力練習ができます。
+  </p>
+</details>
+
+<details>
+  <summary>CPMとは何ですか？</summary>
+  <p>
+    CPM（Characters Per Minute）とは、<strong>1分間に入力できた文字数</strong>を表す指標です。
+    日本語タイピングではWPMよりも実態に近く、<strong>入力速度と正確性を総合的に評価</strong>できます。
+    本ゲームでは、このCPMをスコアとして表示しています。
+  </p>
+</details>
 <details>
 <summary>漢字変換のあるタイピング練習はできますか？</summary>
 <p>はい。本ゲームは<strong>IMEによる漢字変換を前提</strong>に入力を判定します。ローマ字入力の速度だけでなく、実務に近い<strong>日本語入力</strong>として練習できます。</p>
