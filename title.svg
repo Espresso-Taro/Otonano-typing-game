@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      viewBox="0 0 960 150"
      role="img"
-     aria-label="IME漢字変換対応 日本語タイピングゲーム 社会人向け">
+     aria-label="大人の日本語タイピングゲーム｜漢字変換対応・実務向け練習">
 
   <style>
     .sub {
@@ -28,11 +28,12 @@
   </text>
 
   <text x="2" y="128" class="main-shadow">
-    IME漢字変換対応 日本語タイピング
+    大人の日本語タイピングゲーム｜漢字変換対応・実務向け練習
   </text>
 
   <text x="0" y="124" class="main">
-    IME漢字変換対応 日本語タイピング
+    大人の日本語タイピングゲーム｜漢字変換対応・実務向け練習
   </text>
 </svg>
+
 
