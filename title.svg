@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg"
-     viewBox="0 0 1500 115"
+     viewBox="0 0 1650 115"
      role="img"
-     aria-label="日本語タイピングゲーム｜漢字変換対応・雑学100テーマ">
+     aria-label="漢字変換対応の日本語タイピングゲーム｜社会人向け・実務練習">
 
   <style>
     .sub {
@@ -30,12 +30,13 @@
 
   <!-- メインタイトル影 -->
   <text x="2" y="52" class="main-shadow" dominant-baseline="hanging">
-    日本語タイピングゲーム｜漢字変換対応・雑学100テーマ
+    漢字変換対応の日本語タイピングゲーム｜社会人向け・実務練習
   </text>
 
   <!-- メインタイトル本体 -->
   <text x="0" y="48" class="main" dominant-baseline="hanging">
-    日本語タイピングゲーム｜漢字変換対応・雑学100テーマ
+    漢字変換対応の日本語タイピングゲーム｜社会人向け・実務練習
   </text>
 
 </svg>
+
