@@ -1,22 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 140" role="img" aria-label="漢字変換対応 日本語タイピングゲーム">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 140" role="img" aria-label="IME漢字変換対応 日本語タイピングゲーム 社会人向け">
   <style>
     .sub {
-      font-size: 26px;
+      font-size: 24px;
       fill: #666;
       font-weight: 700;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.12em;
     }
     .main {
-      font-size: 58px;
+      font-size: 56px;
       fill: #111;
       font-weight: 900;
     }
   </style>
 
-  <text x="0" y="42" class="sub">KANJI IME TYPING</text>
-  <text x="0" y="108" class="main">IME漢字変換対応の日本語タイピングゲーム｜社会人向け実務練習</text>
+  <text x="0" y="40" class="sub">IME KANJI TYPING FOR WORK</text>
+  <text x="0" y="108" class="main">IME漢字変換対応 日本語タイピング</text>
 </svg>
-
-
-
-
