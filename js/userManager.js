@@ -323,7 +323,7 @@ export class UserManager {
   ========================= */
   async _createUniqueGuestUser() {
     for (let i = 0; i < 30; i++) {
-      const name = `ゲスト-${this._randBase36(6)}`;
+      const name = `ゲスト${this._randBase36(5)}`;
       const ref = doc(this.db, "userNames", name);
 
       const ok = await runTransaction(this.db, async (tx) => {
@@ -372,6 +372,7 @@ export class UserManager {
     if (personalId) localStorage.removeItem(`currentGroupId_v1:${personalId}`);
   }
 }
+
 
 
 
