@@ -855,7 +855,8 @@ function lengthGroupOf(len) {
   if (len <= 100) return "short";
   if (len <= 150) return "medium";
   if (len <= 200) return "long";
-  return "xl";
+  if (len <= 250) return "xl";
+  return null;                   // ★ 251以上は使わない
 }
 
 
@@ -2778,5 +2779,6 @@ window.addEventListener("pageshow", () => {
     });
   });
 });
+
 
 
