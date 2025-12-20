@@ -441,8 +441,8 @@ function startTypingByUserAction() {
   inputEl.focus({ preventScroll: true });
 
   // 開始トリガー登録（IME含む）
-  inputEl.removeEventListener("compositionstart", startTypingImmediately);
-  inputEl.removeEventListener("input", startTypingImmediately);
+  inputEl.removeEventListener("compositionstart", startTypingImmediately, true);
+  inputEl.removeEventListener("input",            startTypingImmediately, true);
 
   inputEl.addEventListener("compositionstart", startTypingImmediately, { once: true, capture: true });
   inputEl.addEventListener("input",            startTypingImmediately, { once: true, capture: true });
@@ -2779,6 +2779,7 @@ window.addEventListener("pageshow", () => {
     });
   });
 });
+
 
 
 
