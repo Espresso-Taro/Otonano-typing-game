@@ -1,9 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg"
-     viewBox="0 0 700 125"
+     viewBox="0 0 700 100"
      role="img"
      aria-label="漢字変換（IME）に対応した社会人向け日本語タイピング練習サービスのタイトル">
 
-  <style>
+  <style>
+
     .main-shadow {
       font-size: 45px;
       fill: #000;
@@ -16,7 +17,8 @@
       font-weight: 900;
     }
   </style>
-
+
+
 <!-- メインタイトル影 -->
 <text x="2" y="9" class="main-shadow" dominant-baseline="hanging">
   <tspan x="2" dy="0">漢字変換タイピングゲーム</tspan>
@@ -30,6 +32,7 @@
 </text>
 
 </svg>
+
 
 
 
