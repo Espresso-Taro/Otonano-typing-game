@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg"
-     viewBox="0 0 850 180"
+     viewBox="0 0 630 125"
      role="img"
      aria-label="漢字変換対応タイピングゲーム｜社会人向け・実務練習">
 
@@ -11,13 +11,13 @@
       letter-spacing: 0.12em;
     }
     .main-shadow {
-      font-size: 60px;
+      font-size: 45px;
       fill: #000;
       font-weight: 900;
       opacity: 0.18;
     }
     .main {
-      font-size: 60px;
+      font-size: 45px;
       fill: #111;
       font-weight: 900;
     }
@@ -28,18 +28,19 @@
     IME KANJI TYPING FOR WORK
   </text>
 <!-- メインタイトル影 -->
-<text x="2" y="42" class="main-shadow" dominant-baseline="hanging">
+<text x="2" y="32" class="main-shadow" dominant-baseline="hanging">
   <tspan x="2" dy="0">漢字変換対応タイピングゲーム</tspan>
-  <tspan x="182" dy="74">｜社会人向け・実務練習</tspan>
+  <tspan x="132" dy="50">｜社会人向け・実務練習</tspan>
 </text>
 
 <!-- メインタイトル本体 -->
-<text x="0" y="38" class="main" dominant-baseline="hanging">
+<text x="0" y="28" class="main" dominant-baseline="hanging">
   <tspan x="0" dy="0">漢字変換対応タイピングゲーム</tspan>
-  <tspan x="180" dy="74">｜社会人向け・実務練習</tspan>
+  <tspan x="130" dy="50">｜社会人向け・実務練習</tspan>
 </text>
 
 </svg>
+
 
 
 
