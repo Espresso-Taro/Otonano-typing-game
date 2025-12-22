@@ -1,3 +1,10 @@
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+}
 .article-page {
   font-size: 1.05rem;      /* PCでも少し大きく */
   line-height: 1.9;
