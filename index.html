@@ -386,8 +386,16 @@ h1{
   <p id="text">読み込み中...</p>
 
   <div class="typingArea">
-    <textarea id="input"></textarea>
+    <label for="input" class="sr-only">タイピング入力欄</label>
+    <textarea
+      id="input"
+      autocomplete="off"
+      autocapitalize="off"
+      spellcheck="false"
+      aria-describedby="typing-status"
+    ></textarea>
   </div>
+  <div id="typing-status" role="status" aria-live="polite"></div>
 
   <div id="inputTime" class="input-time"></div>
 
@@ -584,6 +592,7 @@ h1{
   <script type="module" src="./js/app.js" defer></script>
 </body>
 </html>
+
 
 
 
