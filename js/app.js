@@ -1470,7 +1470,7 @@ function updateMetaInfo() {
     parts.push(`テーマ：${item.theme}`);
   }
 
-  metaInfoEl.textContent = parts.join(" / ");
+  metaInfoEl.textContent = `見本文：${parts.join(" / ")}`;
 }
 
 
@@ -1490,7 +1490,7 @@ function showNoItemMessage(diff, lg, category, theme) {
 
   if (metaInfoEl) {
     metaInfoEl.textContent =
-      `難度：${diffLabel(diff)} / 長さ：${lengthLabel(lg)} / ※該当文章なし`;
+      `見本文：難度：${diffLabel(diff)} / 長さ：${lengthLabel(lg)} / ※該当文章なし`;
   }
 }
 
@@ -2778,6 +2778,7 @@ window.addEventListener("pageshow", () => {
     });
   });
 });
+
 
 
 
