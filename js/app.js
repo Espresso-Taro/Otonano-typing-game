@@ -1470,7 +1470,10 @@ function updateMetaInfo() {
     parts.push(`テーマ：${item.theme}`);
   }
 
-  metaInfoEl.textContent = `見本文：${parts.join(" / ")}`;
+  const metaValueEl = document.getElementById("metaInfoValue");
+  if (metaValueEl) {
+    metaValueEl.textContent = parts.join(" / ");
+  }
 }
 
 
@@ -1488,9 +1491,9 @@ function showNoItemMessage(diff, lg, category, theme) {
     startBtn.disabled = true;
   }
 
-  if (metaInfoEl) {
-    metaInfoEl.textContent =
-      `見本文：難度：${diffLabel(diff)} / 長さ：${lengthLabel(lg)} / ※該当文章なし`;
+  if (metaValueEl) {
+    metaValueEl.textContent =
+      `難度：${diffLabel(diff)} / 長さ：${lengthLabel(lg)} / ※該当文章なし`;
   }
 }
 
@@ -2778,6 +2781,7 @@ window.addEventListener("pageshow", () => {
     });
   });
 });
+
 
 
 
