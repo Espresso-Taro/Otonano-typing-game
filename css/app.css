@@ -1,7 +1,7 @@
 .typingArea {
   display: flex;
   flex-direction: column;
-  gap: 4px; /* ラベルと入力欄の距離 */
+  gap: 0px; /* ラベルと入力欄の距離 */
 }
 .article-page {
   font-size: 1.05rem;      /* PCでも少し大きく */
